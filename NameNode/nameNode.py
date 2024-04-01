@@ -1,8 +1,18 @@
 
-index_DB = {}
+index_DB = {
+    "file1": {"datanode_id": "datanode1", "blocks": ["block1", "block2", "block3"]},
+    "file2": {"datanode_id": "datanode2", "blocks": ["block4", "block5", "block6"]},
+    "file3": {"datanode_id": "datanode3", "blocks": ["block7", "block8", "block9"]},
+    "file4": {"datanode_id": "datanode4", "blocks": ["block10", "block11", "block12"]},
+    "file5": {"datanode_id": "datanode5", "blocks": ["block13", "block14", "block15"]},
+}
 
 def create(file):
-    print()
+    if file in index_DB:
+        print(f"File {file} already exists.")
+        return
+    index_DB[file] = {"datanode_id": None, "blocks": []}
+    print(f"File {file} created successfully")
 
 
 def allocate_blocks(file):
