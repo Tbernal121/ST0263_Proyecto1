@@ -1,66 +1,52 @@
+import grpc
 import os
+import sys
 
-# mostrar todos los nombres de los archivos que hay en el sistema
-def list_files(): 
-    print("All files")
+current_dir = os.path.dirname(os.path.abspath(__file__))
+parent_dir = os.path.dirname(current_dir)
+sys.path.append(parent_dir)
 
+from Protobufs import Service_pb2
+from Protobufs import Service_pb2_grpc
 
-# es como hacer mkdir
-def create_file(file_name, data): 
-    print(f"{file_name} file created")
+def run():
+    channel = grpc.insecure_channel('localhost:50051')
+    stub = Service_pb2_grpc.ClientServiceStub(channel)
 
+    while True:
+        print("\nMenu:")
+        print("1. List files") # mostrar todos los nombres de los archivos que hay en el sistema
+        print("2. Create file") # es como hacer mkdir. (file_name, data)
+        print("3. Open file") # es como hacer cd directory_name. (directory_name)
+        print("4. Close file") # es como hacer cd..  (directory_name)
+        print("5. Read file") # (file_name)
+        print("6. Write file") # (file_name)
+        print("7. Exit")     
 
-# es como hacer cd directory_name
-def open(directory_name):
-    print(f"{directory_name} file opened")
+        choice = input("Enter your choice: ")
 
+        if choice == '1':
+            response = stub.ListFiles(Service_pb2.Empty())
+            print("Client received: " + ', '.join(response.files))
+        elif choice == '2':
+            # Call CreateFile here
+            pass
+        elif choice == '3':
+            # Call Open here
+            pass
+        elif choice == '4':
+            # Call Close here
+            pass
+        elif choice == '5':
+            # Call Read here
+            pass
+        elif choice == '6':
+            # Call Write here
+            pass
+        elif choice == '7':
+            break 
+        else:
+            print("Invalid choice. Please enter a number between 1 and 7")
 
-# es como hacer cd..
-def close(directory_name):
-    print(f"{directory_name} file closed")
-
-
-def read(file_name):
-    print(f"show content of {file_name}")
-
-
-def write(file_name):
-    print(f"writing in {file_name}")
-
-
-def file_partition(file_name):  
-    block_size=1024*1024 #1mb
-    base_file_name = os.path.splitext(os.path.basename(file_name))[0] + os.path.splitext(os.path.basename(file_name))[1]
-    destination_directory = f"{base_file_name}_dir"
-    
-    # Create the directory
-    os.makedirs(destination_directory, exist_ok=True)
-
-    block_num = 1
-    with open(file_name, 'rb') as file:
-        block = file.read(block_size)
-        while block:
-            part_name = f"{destination_directory}/part-{block_num:04d}"
-            with open(part_name, 'wb') as part_file:
-                part_file.write(block)
-            print(f"Block {part_name} created")
-            block_num += 1
-            block = file.read(block_size)
-
-            '''def main():
-                file_name = input("Enter file name to partition: ")  # Replace this with the file name
-                file_partition(file_name)'''
-
-
-def join_partitioned_files(split_directory, destination_file_name):    
-    parts = sorted(os.listdir(split_directory))
-    with open(destination_file_name, 'wb') as destination_file:
-        for part in parts:
-            part_path = os.path.join(split_directory, part)
-            with open(part_path, 'rb') as part_file:
-                destination_file.write(part_file.read())
-
-            '''def main():
-                split_directory = input("Enter the directory: ")
-                destination_file_name = f"reconstructed_{split_directory}.txt"
-                join_partitioned_files(split_directory, destination_file_name)'''
+if __name__ == '__main__':
+    run()

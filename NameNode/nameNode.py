@@ -1,3 +1,14 @@
+from concurrent import futures
+import grpc
+import os
+import sys
+
+current_dir = os.path.dirname(os.path.abspath(__file__))
+parent_dir = os.path.dirname(current_dir)
+sys.path.append(parent_dir)
+
+from Protobufs import Service_pb2
+from Protobufs import Service_pb2_grpc
 
 index_DB = {
     "file1": {"datanode_id": "datanode1", "blocks": ["block1", "block2", "block3"]},
@@ -7,34 +18,55 @@ index_DB = {
     "file5": {"datanode_id": "datanode5", "blocks": ["block13", "block14", "block15"]},
 }
 
-def create(file):
-    if file in index_DB:
-        print(f"File {file} already exists.")
-        return
-    index_DB[file] = {"datanode_id": None, "blocks": []}
-    print(f"File {file} created successfully")
+class ClientService(Service_pb2_grpc.ClientServiceServicer):
+    
+    def ListFiles(self, request, context):
+        file_names = list(index_DB.keys())
+        return Service_pb2.FileList(files=file_names)
+    
+    def CreateFile(self, request, context):
+        file_name = request.name
+        if file_name in index_DB:
+            return Service_pb2.Status(success=False, message=f"File {file_name} already exists")
+        index_DB[file_name] = {"datanode_id": None, "blocks": []}
+        return Service_pb2.Status(success=True, message=f"File {file_name} created successfully")
+
+    def Open(self, request, context):
+        return super().Open(request, context)
+    
+    def Close(self, request, context):
+        return super().Close(request, context)
+    
+    def Read(self, request, context):
+        return super().Read(request, context)
+    
+    def Write(self, request, context):
+        return super().Write(request, context)
 
 
+def serve():
+    server = grpc.server(futures.ThreadPoolExecutor(max_workers=10))
+    Service_pb2_grpc.add_ClientServiceServicer_to_server(ClientService(), server)
+    server.add_insecure_port('[::]:50051')
+    server.start()
+    server.wait_for_termination()
+
+if __name__ == '__main__':
+    serve()
+
+
+'''
 def allocate_blocks(file):
     print()
-
-
 def append(file, data):
     print()
-
-
 def get_block_locations(file):
     print()
-
-
 def register_datanode(datanode_id):
     print()
-
-
 def datanode_heartbeat(datanode_id):
     print()
-
-
 # cuando un DataNode se cae y toca reasignar todos los bloques que este tenía. 
 def relocate_blocks (datanode_id):
     print()
+'''
