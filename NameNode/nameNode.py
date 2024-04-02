@@ -27,10 +27,21 @@ class ClientService(Service_pb2_grpc.ClientServiceServicer):
     
     def CreateFile(self, request, context):
         file_name = request.name
+        file_content = request.data
         if file_name in index_DB:
             return Service_pb2.Status(success=False, message=f"File {file_name} already exists")
-        index_DB[file_name] = {"datanode_id": None, "blocks": []}
-        return Service_pb2.Status(success=True, message=f"File {file_name} created successfully")
+        
+        # Partition the file content into blocks
+        blocks = file_partition(file_content)
+        
+        # Assign each block to a DataNode
+        for i, block in enumerate(blocks):
+            data_node_id = f"dataNode{i % NUM_DATANODES}"  # Replace with your logic to select a DataNode
+            index_DB[file_name] = {"datanode_id": data_node_id, "blocks": [block]}
+        
+        # Return the DataNode addresses to the client
+        data_node_addresses = [data_node_id for data_node_id in index_DB[file_name]["datanode_id"]]
+        return Service_pb2.Status(success=True, message=f"File {file_name} created successfully. Send blocks to {data_node_addresses}")
 
     def Open(self, request, context):
         return super().Open(request, context)

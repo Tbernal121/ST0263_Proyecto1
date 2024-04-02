@@ -17,7 +17,7 @@ def run():
         print("\nMenu:")
         print("1. List files") # mostrar todos los nombres de los archivos que hay en el sistema
         print("2. Create file") # es como hacer mkdir. (file_name, data)
-        print("3. Open file") # es como hacer cd directory_name. (directory_name)
+        print("3. Open file to read or write") # es como hacer cd directory_name. (directory_name)
         print("4. Close file") # es como hacer cd..  (directory_name)
         print("5. Read file") # (file_name)
         print("6. Write file") # (file_name)
@@ -28,14 +28,32 @@ def run():
         if choice == '1':
             response = nameNode_stub.ListFiles(Service_pb2.Empty())
             print("Client received: " + ', '.join(response.files))
+
         elif choice == '2':
-            file_name = input("Enter the name of the file to create: ")
-            file_data = Service_pb2.FileData(name=file_name)
+            file_name = input("Enter the name of the file to create: ")            
+            # Open the file in read mode
+            with open(f'files/{file_name}', 'r') as file:
+                file_content = file.read()          
+            file_data = Service_pb2.FileData(name=file_name, data=file_content)           
             response = nameNode_stub.CreateFile(file_data)
             print(response.message)
+
         elif choice == '3':
-            # Call Open here
-            pass
+            while(True):
+                file_name = input("Enter the name of the file")
+                # check if the file exist
+                action = input("Press 1 to read, 2 to write and 3 to return: ")
+                if action == '1':
+                    # Read logic
+                    pass
+                elif action == '2':
+                    # Write logic
+                    pass
+                elif action == '3':
+                    break
+                else:   
+                    print("Invalid choice. Please enter a number between 1 and 3")   
+
         elif choice == '4':
             # Call Close here
             pass
