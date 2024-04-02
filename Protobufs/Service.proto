@@ -22,7 +22,7 @@ service ClientService {
   }
   
   service DataNodeService {
-    rpc SendHeartbeat(Empty) returns (Status) {}
+    rpc SendHeartbeat(DataNodeID) returns (Status) {}
     rpc StoreBlock(BlockData) returns (Status) {}
     rpc DeleteBlock(BlockId) returns (Status) {}
     rpc SendBlock(BlockId) returns (BlockData) {}
@@ -82,6 +82,10 @@ message BlockRelocation {
 }
 
 message BlockId {
+  string id = 1;
+}
+
+message DataNodeID {
   string id = 1;
 }
 

@@ -2,6 +2,7 @@ from concurrent import futures
 import grpc
 import os
 import sys
+import time
 
 current_dir = os.path.dirname(os.path.abspath(__file__))
 parent_dir = os.path.dirname(current_dir)
@@ -44,9 +45,23 @@ class ClientService(Service_pb2_grpc.ClientServiceServicer):
         return super().Write(request, context)
 
 
+class DataNodeService(Service_pb2_grpc.DataNodeServiceServicer):
+
+    def __init__(self):
+        self.data_nodes = {}  # Dictionary to store the status of DataNodes
+    
+    def SendHeartbeat(self, request, context):
+        data_node_id = request.id
+        self.data_nodes[data_node_id] = time.time()  # Update the last heartbeat time
+        print(f"Heartbeat received from {data_node_id}")
+        return Service_pb2.Status(success=True, message=f"Heartbeat from {data_node_id} successfully recieved")
+
+
 def serve():
     server = grpc.server(futures.ThreadPoolExecutor(max_workers=10))
     Service_pb2_grpc.add_ClientServiceServicer_to_server(ClientService(), server)
+    #Service_pb2_grpc.add_NameNodeServiceServicer_to_server(NameNodeService(), server)
+    Service_pb2_grpc.add_DataNodeServiceServicer_to_server(DataNodeService(), server)
     server.add_insecure_port('[::]:50051')
     server.start()
     server.wait_for_termination()

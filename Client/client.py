@@ -10,8 +10,8 @@ from Protobufs import Service_pb2
 from Protobufs import Service_pb2_grpc
 
 def run():
-    channel = grpc.insecure_channel('localhost:50051')
-    stub = Service_pb2_grpc.ClientServiceStub(channel)
+    channel = grpc.insecure_channel('localhost:50051') # Replace with the address of your nameNode Leader bootstrap
+    nameNode_stub = Service_pb2_grpc.ClientServiceStub(channel)
 
     while True:
         print("\nMenu:")
@@ -26,11 +26,13 @@ def run():
         choice = input("Enter your choice: ")
 
         if choice == '1':
-            response = stub.ListFiles(Service_pb2.Empty())
+            response = nameNode_stub.ListFiles(Service_pb2.Empty())
             print("Client received: " + ', '.join(response.files))
         elif choice == '2':
-            # Call CreateFile here
-            pass
+            file_name = input("Enter the name of the file to create: ")
+            file_data = Service_pb2.FileData(name=file_name)
+            response = nameNode_stub.CreateFile(file_data)
+            print(response.message)
         elif choice == '3':
             # Call Open here
             pass
@@ -44,7 +46,7 @@ def run():
             # Call Write here
             pass
         elif choice == '7':
-            break 
+            break         
         else:
             print("Invalid choice. Please enter a number between 1 and 7")
 

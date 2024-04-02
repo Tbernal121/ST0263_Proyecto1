@@ -567,7 +567,7 @@ class DataNodeServiceStub(object):
         """
         self.SendHeartbeat = channel.unary_unary(
                 '/DataNodeService/SendHeartbeat',
-                request_serializer=Service__pb2.Empty.SerializeToString,
+                request_serializer=Service__pb2.DataNodeID.SerializeToString,
                 response_deserializer=Service__pb2.Status.FromString,
                 )
         self.StoreBlock = channel.unary_unary(
@@ -641,7 +641,7 @@ def add_DataNodeServiceServicer_to_server(servicer, server):
     rpc_method_handlers = {
             'SendHeartbeat': grpc.unary_unary_rpc_method_handler(
                     servicer.SendHeartbeat,
-                    request_deserializer=Service__pb2.Empty.FromString,
+                    request_deserializer=Service__pb2.DataNodeID.FromString,
                     response_serializer=Service__pb2.Status.SerializeToString,
             ),
             'StoreBlock': grpc.unary_unary_rpc_method_handler(
@@ -691,7 +691,7 @@ class DataNodeService(object):
             timeout=None,
             metadata=None):
         return grpc.experimental.unary_unary(request, target, '/DataNodeService/SendHeartbeat',
-            Service__pb2.Empty.SerializeToString,
+            Service__pb2.DataNodeID.SerializeToString,
             Service__pb2.Status.FromString,
             options, channel_credentials,
             insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
