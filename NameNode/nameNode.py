@@ -57,6 +57,29 @@ class DataNodeService(Service_pb2_grpc.DataNodeServiceServicer):
         return Service_pb2.Status(success=True, message=f"Heartbeat from {data_node_id} successfully recieved")
 
 
+class NameNodeService(Service_pb2_grpc.NameNodeServiceServicer):
+    
+    def allocate_blocks(file):
+        pass
+
+    def append(file, data):
+        pass
+
+    def get_block_locations(file):
+        pass
+
+    def register_datanode(datanode_id):
+        pass
+
+    def datanode_heartbeat(datanode_id):
+        pass
+
+    # cuando un DataNode se cae y toca reasignar todos los bloques que este tenía. 
+    def relocate_blocks (datanode_id):
+        pass
+
+
+
 def serve():
     server = grpc.server(futures.ThreadPoolExecutor(max_workers=10))
     Service_pb2_grpc.add_ClientServiceServicer_to_server(ClientService(), server)
@@ -71,17 +94,5 @@ if __name__ == '__main__':
 
 
 '''
-def allocate_blocks(file):
-    print()
-def append(file, data):
-    print()
-def get_block_locations(file):
-    print()
-def register_datanode(datanode_id):
-    print()
-def datanode_heartbeat(datanode_id):
-    print()
-# cuando un DataNode se cae y toca reasignar todos los bloques que este tenía. 
-def relocate_blocks (datanode_id):
-    print()
+
 '''

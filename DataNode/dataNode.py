@@ -16,6 +16,9 @@ channel = grpc.insecure_channel('localhost:50051')  # Replace with the address o
 nameNode_stub = Service_pb2_grpc.DataNodeServiceStub(channel)
 
 class DataNodeService(Service_pb2_grpc.DataNodeServiceServicer):
+
+    def __init__(self):
+        self.blocks = {}  # Dictionary to store the data blocks
        
     def SendHeartbeat(self):
         while True:
@@ -23,10 +26,13 @@ class DataNodeService(Service_pb2_grpc.DataNodeServiceServicer):
             response = nameNode_stub.SendHeartbeat(heartbeat)
             print("Heartbeat sent")
             time.sleep(10)  # Wait for 10 seconds before sending the next heartbeat        
-            
+    
     def StoreBlock(self, request, context): # (block_id, data)
-        # Implementa la lógica para almacenar un bloque de datos en el dataNode
-        pass
+            block_id = request.block_id
+            data = request.data
+            self.blocks[block_id] = data  # Store the data block
+            print(f"Block {block_id} stored")
+            return Service_pb2.Status(success=True, message=f"Block {block_id} stored successfully")
 
     def SendBlock(self, request, context): # (block_id, data, destination) 
         # Implementa la lógica para almacenar un bloque de datos en el dataNode
