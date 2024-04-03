@@ -1,6 +1,7 @@
 import grpc
 import os
 import sys
+import partitionManagement
 
 current_dir = os.path.dirname(os.path.abspath(__file__))
 parent_dir = os.path.dirname(current_dir)
@@ -10,8 +11,9 @@ from Protobufs import Service_pb2
 from Protobufs import Service_pb2_grpc
 
 def run():
-    channel = grpc.insecure_channel('localhost:50051') # Replace with the address of your nameNode Leader bootstrap
-    nameNode_stub = Service_pb2_grpc.ClientServiceStub(channel)
+    channel_nameNode = grpc.insecure_channel('localhost:50051') # Replace with the address of your nameNode Leader bootstrap
+    client_stub = Service_pb2_grpc.ClientServiceStub(channel_nameNode)
+    #dataNode_stub = Service_pb2_grpc.DataNodeServiceStub(channel)
 
     while True:
         print("\nMenu:")
@@ -26,17 +28,28 @@ def run():
         choice = input("Enter your choice: ")
 
         if choice == '1':
-            response = nameNode_stub.ListFiles(Service_pb2.Empty())
+            response = client_stub.ListFiles(Service_pb2.Empty())
             print("Client received: " + ', '.join(response.files))
 
         elif choice == '2':
-            file_name = input("Enter the name of the file to create: ")            
+            channel_dataNode = grpc.insecure_channel('localhost:50052') # Replace with the address of your nameNode Leader bootstrap
+            dataNode_stub = Service_pb2_grpc.DataNodeServiceStub(channel_dataNode)
+            file_name = input("Enter the name of the file to create: ")    
+
             # Open the file in read mode
-            with open(f'files/{file_name}', 'r') as file:
-                file_content = file.read()          
-            file_data = Service_pb2.FileData(name=file_name, data=file_content)           
-            response = nameNode_stub.CreateFile(file_data)
-            print(response.message)
+            '''with open(f'files/{file_name}', 'r') as file:
+                file_content = file.read()
+            blocks = partitionManagement.file_partition(file_content)'''
+            blocks = partitionManagement.file_partition(f'files/{file_name}')
+            file_data = Service_pb2.FileInfo(name=file_name, num_blocks=len(blocks))        
+            response = client_stub.CreateFile(file_data)
+
+            # Send each block to the DataNode
+            for i, block in enumerate(blocks):
+                block_data = Service_pb2.BlockData(id=block, data="replace this with the data")
+                response = dataNode_stub.StoreBlock(block_data)
+                print(response.message)
+            # then delete the block's directory
 
         elif choice == '3':
             while(True):

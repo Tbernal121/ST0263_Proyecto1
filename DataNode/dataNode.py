@@ -12,8 +12,8 @@ sys.path.append(parent_dir)
 from Protobufs import Service_pb2
 from Protobufs import Service_pb2_grpc
 
-channel = grpc.insecure_channel('localhost:50051')  # Replace with the address of your nameNode Leader bootstrap
-nameNode_stub = Service_pb2_grpc.DataNodeServiceStub(channel)
+channel_nameNode = grpc.insecure_channel('localhost:50051')  # Replace with the address of the nameNode Leader bootstrap
+dataNode_stub = Service_pb2_grpc.DataNodeServiceStub(channel_nameNode)
 
 class DataNodeService(Service_pb2_grpc.DataNodeServiceServicer):
 
@@ -23,12 +23,12 @@ class DataNodeService(Service_pb2_grpc.DataNodeServiceServicer):
     def SendHeartbeat(self):
         while True:
             heartbeat = Service_pb2.DataNodeID(id="dataNode1") # replace dataNode1 bootstrap            
-            response = nameNode_stub.SendHeartbeat(heartbeat)
+            response = dataNode_stub.SendHeartbeat(heartbeat)
             print("Heartbeat sent")
             time.sleep(10)  # Wait for 10 seconds before sending the next heartbeat        
     
     def StoreBlock(self, request, context): # (block_id, data)
-            block_id = request.block_id
+            block_id = request.id
             data = request.data
             self.blocks[block_id] = data  # Store the data block
             print(f"Block {block_id} stored")

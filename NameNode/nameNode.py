@@ -27,21 +27,16 @@ class ClientService(Service_pb2_grpc.ClientServiceServicer):
     
     def CreateFile(self, request, context):
         file_name = request.name
-        file_content = request.data
+        num_blocks = request.num_blocks
         if file_name in index_DB:
-            return Service_pb2.Status(success=False, message=f"File {file_name} already exists")
-        
-        # Partition the file content into blocks
-        blocks = file_partition(file_content)
-        
-        # Assign each block to a DataNode
-        for i, block in enumerate(blocks):
-            data_node_id = f"dataNode{i % NUM_DATANODES}"  # Replace with your logic to select a DataNode
-            index_DB[file_name] = {"datanode_id": data_node_id, "blocks": [block]}
-        
-        # Return the DataNode addresses to the client
-        data_node_addresses = [data_node_id for data_node_id in index_DB[file_name]["datanode_id"]]
-        return Service_pb2.Status(success=True, message=f"File {file_name} created successfully. Send blocks to {data_node_addresses}")
+            print(f"File {file_name} already exists")
+            return Service_pb2.DataNodeID(id=None)
+
+        data_node_id = "dataNode_id1"  # Replace with the address of the DataNode --> bootstrap
+        index_DB[file_name] = {"datanode_id": data_node_id, "blocks": list(range(num_blocks))}
+        # Return the DataNode assignment to the client
+        return Service_pb2.DataNodeID(id=file_name)
+    
 
     def Open(self, request, context):
         return super().Open(request, context)

@@ -21,8 +21,8 @@ class ClientServiceStub(object):
                 )
         self.CreateFile = channel.unary_unary(
                 '/ClientService/CreateFile',
-                request_serializer=Service__pb2.FileData.SerializeToString,
-                response_deserializer=Service__pb2.Status.FromString,
+                request_serializer=Service__pb2.FileInfo.SerializeToString,
+                response_deserializer=Service__pb2.DataNodeID.FromString,
                 )
         self.Open = channel.unary_unary(
                 '/ClientService/Open',
@@ -117,8 +117,8 @@ def add_ClientServiceServicer_to_server(servicer, server):
             ),
             'CreateFile': grpc.unary_unary_rpc_method_handler(
                     servicer.CreateFile,
-                    request_deserializer=Service__pb2.FileData.FromString,
-                    response_serializer=Service__pb2.Status.SerializeToString,
+                    request_deserializer=Service__pb2.FileInfo.FromString,
+                    response_serializer=Service__pb2.DataNodeID.SerializeToString,
             ),
             'Open': grpc.unary_unary_rpc_method_handler(
                     servicer.Open,
@@ -189,8 +189,8 @@ class ClientService(object):
             timeout=None,
             metadata=None):
         return grpc.experimental.unary_unary(request, target, '/ClientService/CreateFile',
-            Service__pb2.FileData.SerializeToString,
-            Service__pb2.Status.FromString,
+            Service__pb2.FileInfo.SerializeToString,
+            Service__pb2.DataNodeID.FromString,
             options, channel_credentials,
             insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
 

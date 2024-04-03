@@ -2,7 +2,7 @@ syntax = "proto3";
 
 service ClientService {
     rpc ListFiles(Empty) returns (FileList) {}
-    rpc CreateFile(FileData) returns (Status) {}
+    rpc CreateFile(FileInfo) returns (DataNodeID) {}
     rpc Open(FilePath) returns (Status) {}
     rpc Close(FilePath) returns (Status) {}
     rpc Read(FilePath) returns (FileData) {}
@@ -43,6 +43,11 @@ message FilePath {
 message FileData {
   string name = 1;
   bytes data = 2;
+}
+
+message FileInfo {
+  string name = 1;
+  int32 num_blocks = 2;
 }
 
 message PartitionedFile {
@@ -91,7 +96,7 @@ message DataNodeID {
 
 message BlockData {
   string id = 1;
-  bytes data = 2;
+  string data = 2;
 }
 
 message LeaderInfo {
