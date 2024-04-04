@@ -18,7 +18,11 @@ dataNode_stub = Service_pb2_grpc.DataNodeServiceStub(channel_nameNode)
 class DataNodeService(Service_pb2_grpc.DataNodeServiceServicer):
 
     def __init__(self):
-        self.blocks = {}  # Dictionary to store the data blocks
+        self.blocks = {
+            'block_id1': 'data del bloque 1',
+            'block_id2': 'data del bloque 2',
+            'block_id3': 'data del bloque 3',
+        }        
        
     def SendHeartbeat(self):
         while True:
@@ -31,7 +35,7 @@ class DataNodeService(Service_pb2_grpc.DataNodeServiceServicer):
             block_id = request.id
             data = request.data
             self.blocks[block_id] = data  # Store the data block
-            print(f"Block {block_id} stored")
+            print(f"Block {block_id} stored. Content: {data}")
             return Service_pb2.Status(success=True, message=f"Block {block_id} stored successfully")
 
     def SendBlock(self, request, context): # (block_id, data, destination) 
@@ -51,14 +55,14 @@ class DataNodeService(Service_pb2_grpc.DataNodeServiceServicer):
         pass
 
 def serve():
+    service_dataNode = DataNodeService()
     server = grpc.server(futures.ThreadPoolExecutor(max_workers=10))
-    Service_pb2_grpc.add_DataNodeServiceServicer_to_server(DataNodeService(), server)
+    Service_pb2_grpc.add_DataNodeServiceServicer_to_server(service_dataNode, server)
     server.add_insecure_port('[::]:50052')
     server.start()
     # Start the SendHeartbeat method in a separate thread
-    heartbeat_thread = threading.Thread(target=DataNodeService().SendHeartbeat)
+    heartbeat_thread = threading.Thread(target=service_dataNode.SendHeartbeat)
     heartbeat_thread.start()    
-    #DataNodeService().SendHeartbeat()
     server.wait_for_termination()
 
 if __name__ == '__main__':

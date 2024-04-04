@@ -87,18 +87,14 @@ class NameNodeService(Service_pb2_grpc.NameNodeServiceServicer):
 
 
 def serve():
+    service_dataNode = DataNodeService()
+    service_client = ClientService()
     server = grpc.server(futures.ThreadPoolExecutor(max_workers=10))
-    Service_pb2_grpc.add_ClientServiceServicer_to_server(ClientService(), server)
-    #Service_pb2_grpc.add_NameNodeServiceServicer_to_server(NameNodeService(), server)
-    Service_pb2_grpc.add_DataNodeServiceServicer_to_server(DataNodeService(), server)
+    Service_pb2_grpc.add_ClientServiceServicer_to_server(service_client, server)
+    Service_pb2_grpc.add_DataNodeServiceServicer_to_server(service_dataNode, server)
     server.add_insecure_port('[::]:50051')
     server.start()
     server.wait_for_termination()
 
 if __name__ == '__main__':
     serve()
-
-
-'''
-
-'''

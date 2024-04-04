@@ -46,7 +46,7 @@ def run():
 
             # Send each block to the DataNode
             for i, block in enumerate(blocks):
-                block_data = Service_pb2.BlockData(id=block, data="replace this with the data")
+                block_data = Service_pb2.BlockData(id=block, data=f"{block} data")
                 response = dataNode_stub.StoreBlock(block_data)
                 print(response.message)
             # then delete the block's directory
