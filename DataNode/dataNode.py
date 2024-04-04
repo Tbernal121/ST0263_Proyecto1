@@ -38,9 +38,20 @@ class DataNodeService(Service_pb2_grpc.DataNodeServiceServicer):
             print(f"Block {block_id} stored. Content: {data}")
             return Service_pb2.Status(success=True, message=f"Block {block_id} stored successfully")
 
-    def SendBlock(self, request, context): # (block_id, data, destination) 
-        # Implementa la lógica para almacenar un bloque de datos en el dataNode
-        pass    
+    def SendBlock(self, request, context):
+            block_id = request.id
+            # Busca el ID del bloque en el diccionario de bloques almacenados
+            if block_id in self.blocks:
+                data = self.blocks[block_id]
+        # Si se encuentra, devuelve los datos del bloque
+                return Service_pb2.BlockData(id=block_id, data=data)
+            else:
+        # Si no se encuentra, establece un código de error y un mensaje
+                context.set_code(grpc.StatusCode.NOT_FOUND)
+                context.set_details(f'Block {block_id} not found')
+                return Service_pb2.BlockData()
+   
+
 
     def DeleteBlock(self, request, context): # (block_id)
         # Implementa la lógica para eliminar un bloque de datos del dataNode
