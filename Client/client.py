@@ -98,8 +98,37 @@ def run():
                         #print(file_data)
                 
                 elif action == '2':
-                    # Write logic
-                    pass
+                    
+                    data_to_write = input("Enter the content to write to the file: ")
+                    blocks = partitionManagement.file_partition(data_to_write)
+                     # Solicitar al NameNode que cree el archivo y determine la ubicación de los bloques
+                    try:
+                        file_info = Service_pb2.FileInfo(name=file_name, num_blocks=len(blocks))
+                        response = nameNode_stub.CreateFile(file_info)
+
+                        if not response.success:
+                            print(f"Failed to create file {file_name}: {response.message}")
+                            continue
+
+                        block_locations = nameNode_stub.GetBlockLocations(Service_pb2.FileName(name=file_name))
+
+                    # Enviar cada bloque al DataNode correspondiente.
+                        for block_data, block_location in zip(blocks, block_locations.locations):
+                         # Asumiendo que get_dataNode_stub devuelve el stub correcto basado en el dataNode_id.
+                            dataNode_stub = get_dataNode_stub(block_location.dataNode_id)
+                            block_request = Service_pb2.BlockData(id=block_location.block_id, data=block_data)
+
+                        # Almacenar el bloque en el DataNode.
+                            store_response = dataNode_stub.StoreBlock(block_request)
+                        if not store_response.success:
+                            print(f"Failed to store block {block_location.block_id}: {store_response.message}")
+                            break  # Salir del bucle si hay un error.
+                        else:
+                            print(f"Block {block_location.block_id} stored successfully.")
+                    except grpc.RpcError as e:
+                                print(f"Failed to write content to {file_name}: {e}")
+
+        
                 elif action == '3':
                     break
                 else:   

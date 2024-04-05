@@ -76,7 +76,7 @@ class DataNodeService(Service_pb2_grpc.DataNodeServiceServicer):
 
 
 class NameNodeService(Service_pb2_grpc.NameNodeServiceServicer):
-    
+        
     def allocate_blocks(file):
         pass
 
