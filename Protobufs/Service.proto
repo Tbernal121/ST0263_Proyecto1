@@ -70,8 +70,7 @@ message BlockLocation {
 }
 
 message BlockLocations {
-  string name = 1;
-  map<string, string> locations = 2;  // Map from block ID to DataNode ID
+  repeated BlockLocation locations = 1;  // BlockLocation list
 }
 
 message DataNodeInfo {

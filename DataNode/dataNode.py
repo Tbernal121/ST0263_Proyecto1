@@ -43,12 +43,12 @@ class DataNodeService(Service_pb2_grpc.DataNodeServiceServicer):
             # Busca el ID del bloque en el diccionario de bloques almacenados
             if block_id in self.blocks:
                 data = self.blocks[block_id]
-        # Si se encuentra, devuelve los datos del bloque
+                # Si se encuentra, devuelve los datos del bloque
+                print(f"se encontró el bloque id: {block_id}. data: {data}")
                 return Service_pb2.BlockData(id=block_id, data=data)
             else:
-        # Si no se encuentra, establece un código de error y un mensaje
-                context.set_code(grpc.StatusCode.NOT_FOUND)
-                context.set_details(f'Block {block_id} not found')
+                # Si no se encuentra, establece un código de error y un mensaje
+                print(f"no se encontró el bloque id: {block_id}")
                 return Service_pb2.BlockData()
    
 

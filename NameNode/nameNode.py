@@ -12,11 +12,11 @@ from Protobufs import Service_pb2
 from Protobufs import Service_pb2_grpc
 
 index_DB = {
-    "file1": {"datanode_id": "datanode1", "blocks": ["block1", "block2", "block3"]},
-    "file2": {"datanode_id": "datanode2", "blocks": ["block4", "block5", "block6"]},
-    "file3": {"datanode_id": "datanode3", "blocks": ["block7", "block8", "block9"]},
-    "file4": {"datanode_id": "datanode4", "blocks": ["block10", "block11", "block12"]},
-    "file5": {"datanode_id": "datanode5", "blocks": ["block13", "block14", "block15"]},
+    "file1": {"datanode_id": "datanode_id1", "blocks": ["block_id1", "block_id2", "block_id3"]},
+    "file2": {"datanode_id": "datanode_id2", "blocks": ["block_id4", "block_id5", "block_id6"]},
+    "file3": {"datanode_id": "datanode_id3", "blocks": ["block_id7", "block_id8", "block_id9"]},
+    "file4": {"datanode_id": "datanode_id4", "blocks": ["block_id10", "block_id11", "block_id12"]},
+    "file5": {"datanode_id": "datanode_id5", "blocks": ["block_id13", "block_id14", "block_id15"]},
 }
 
 class ClientService(Service_pb2_grpc.ClientServiceServicer):
@@ -37,20 +37,15 @@ class ClientService(Service_pb2_grpc.ClientServiceServicer):
         return Service_pb2.DataNodeID(id=file_name)
     
     def GetBlockLocations(self, request, context):
-        print("pasa por aquí #1")
-        file_name = request.name        
-        if file_name in index_DB: 
-            print("pasa por aquí #2")
+        file_name = request.name
+        if file_name in index_DB:
             file_info = index_DB[file_name]
             block_locations = []
             for block_id in file_info['blocks']:
                 dataNode_id = file_info['datanode_id']
-                print("pasa por aquí #3")
                 block_location = Service_pb2.BlockLocation(block_id=block_id, dataNode_id=dataNode_id)
-                print("pasa por aquí #4")
                 block_locations.append(block_location)
-                print(f'locations: {block_locations}')                
-            print("pasa por aquí #5")
+            print(block_locations)
             return Service_pb2.BlockLocations(locations=block_locations)
         else:
             return Service_pb2.Status(success=False, message=f"File {file_name} not found")

@@ -14,11 +14,11 @@ from Protobufs import Service_pb2_grpc
 
 # this dictionary will be in nameNode Class
 dataNode_addresses = {
-    "datanode1": "localhost:50052",
-    "datanode2": "localhost:50053",
-    "datanode3": "localhost:50054",
-    "datanode4": "localhost:50055",
-    "datanode5": "localhost:50056",
+    "datanode_id1": "localhost:50052",
+    "datanode_id2": "localhost:50053",
+    "datanode_id3": "localhost:50054",
+    "datanode_id4": "localhost:50055",
+    "datanode_id5": "localhost:50056",
 }
 
 # Takes a DataNode address and returns a stub to communicate with that DataNode
@@ -77,26 +77,24 @@ def run():
                 action = input("Press 1 to read, 2 to write and 3 to return: ")
                 if action == '1':
                     blocks = []
-                    block_locations_map = nameNode_stub.GetBlockLocations(Service_pb2.FileName(name=file_name))
-                    for block_id, dataNode_id in block_locations_map.locations.items():
-                        dataNode_stub = get_dataNode_stub(dataNode_id) # takes a DataNode address and returns a stub to communicate with that DataNode
-                        block_request = Service_pb2.BlockId(id=block_id)
-                        block = dataNode_stub.SendBlock(block_request)
-                        blocks.append(block.data)
-                    file_data = partitionManagement.join_partitioned_files(blocks)
-                    print(file_data)
-
+                    block_locations_map = nameNode_stub.GetBlockLocations(Service_pb2.FileName(name=file_name))                
                     # Create a temporary directory to store the blocks
                     with tempfile.TemporaryDirectory() as temp_dir:
-                        for i, block_location in enumerate(block_locations.locations):
-                            dataNode_stub = get_dataNode_stub(block_location.dataNode)  # takes a DataNode address and returns a stub to communicate with that DataNode
-                            block_request = Service_pb2.BlockId(id=block_location.block_id)
+                        print("pasa por aqui #2")
+                        for block_locations in block_locations_map.locations:
+                            print("pasa por aqui #3")
+                            block_id = block_locations.block_id
+                            dataNode_id = block_locations.dataNode_id
+                            dataNode_stub = get_dataNode_stub(dataNode_id) # takes a DataNode address and returns a stub to communicate with that DataNode
+                            block_request = Service_pb2.BlockId(id=block_id)                            
                             block = dataNode_stub.SendBlock(block_request)
                             # Write each block to a file in the temporary directory
-                            with open(os.path.join(temp_dir, f'block_{i}'), 'w') as block_file:
+                            with open(os.path.join(temp_dir, block_id), 'w') as block_file:
                                 block_file.write(block.data)
                         # pass the temporary directory to join_partitioned_files
+                        print("pasa por aqui #4")
                         file_data = partitionManagement.join_partitioned_files(temp_dir, f'reconstructed_{file_name}.txt')
+                        print("pasa por aqui #5")
                         #print(file_data)
                 
                 elif action == '2':
