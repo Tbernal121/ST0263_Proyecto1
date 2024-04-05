@@ -60,7 +60,19 @@ class ClientService(Service_pb2_grpc.ClientServiceServicer):
         return super().Read(request, context)
     
     def Write(self, request, context):
-        return super().Write(request, context)
+        file_name = request.name
+        data = request.data  # Asumimos que los datos vienen como bytes
+        num_blocks = len(data) // (1024*1024) + (1 if len(data) % (1024*1024) > 0 else 0)  # 1MB por bloque
+
+        data_node_id = "datanode_id1"
+
+        if file_name not in index_DB:
+            # Crear entrada para el nuevo archivo en el índice
+            index_DB[file_name] = {"datanode_id": data_node_id, "blocks": [f"{file_name}_block_{i}" for i in range(num_blocks)]}
+            return Service_pb2.Status(success=True, message="File created and ready for block storage.")
+        else:
+            # Manejar caso donde el archivo ya existe
+            return Service_pb2.Status(success=False, message="File already exists.")
 
 
 class DataNodeService(Service_pb2_grpc.DataNodeServiceServicer):

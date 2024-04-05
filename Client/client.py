@@ -1,3 +1,4 @@
+import shutil
 import grpc
 import os
 import sys
@@ -8,6 +9,7 @@ import partitionManagement
 current_dir = os.path.dirname(os.path.abspath(__file__))
 parent_dir = os.path.dirname(current_dir)
 sys.path.append(parent_dir)
+
 
 from Protobufs import Service_pb2
 from Protobufs import Service_pb2_grpc
@@ -98,42 +100,45 @@ def run():
                         #print(file_data)
                 
                 elif action == '2':
-                    
-                    data_to_write = input("Enter the content to write to the file: ")
-                    blocks = partitionManagement.file_partition(data_to_write)
-                     # Solicitar al NameNode que cree el archivo y determine la ubicación de los bloques
+                    data_to_write = input("Enter the content to write into the file: ").encode()  
+                    temp_dir = tempfile.mkdtemp()
+                    temp_file_path = os.path.join(temp_dir, "temp_file_to_write")
+                    with open(temp_file_path, 'wb') as temp_file:
+                        temp_file.write(data_to_write)
+                    blocks = partitionManagement.file_partition(temp_file_path)
+
+    # Solicitar al NameNode que cree el archivo y determine la ubicación de los bloques
                     try:
                         file_info = Service_pb2.FileInfo(name=file_name, num_blocks=len(blocks))
-                        response = nameNode_stub.CreateFile(file_info)
-
-                        if not response.success:
-                            print(f"Failed to create file {file_name}: {response.message}")
+                        dataNodeID = nameNode_stub.CreateFile(file_info)
+                        if dataNodeID.id == "":
+                            print(f"Failed to create file {file_name}")
                             continue
 
-                        block_locations = nameNode_stub.GetBlockLocations(Service_pb2.FileName(name=file_name))
+        # Asignar cada bloque a un DataNode según la respuesta del NameNode
+                        for i, block in enumerate(blocks):
+                        # Asumiendo que cada bloque es enviado al mismo DataNode para simplificar. En un caso real, podrías tener diferentes DataNodes para cada bloque.
+                            dataNode_stub = get_dataNode_stub(dataNodeID.id)
 
-                    # Enviar cada bloque al DataNode correspondiente.
-                        for block_data, block_location in zip(blocks, block_locations.locations):
-                         # Asumiendo que get_dataNode_stub devuelve el stub correcto basado en el dataNode_id.
-                            dataNode_stub = get_dataNode_stub(block_location.dataNode_id)
-                            block_request = Service_pb2.BlockData(id=block_location.block_id, data=block_data)
+            # Crear un mensaje BlockData con el ID y los datos
+                        block_data_msg = Service_pb2.BlockData(id=f"{file_name}_block_{i}", data=block)
 
-                        # Almacenar el bloque en el DataNode.
-                            store_response = dataNode_stub.StoreBlock(block_request)
-                        if not store_response.success:
-                            print(f"Failed to store block {block_location.block_id}: {store_response.message}")
-                            break  # Salir del bucle si hay un error.
+            # Envía el bloque al DataNode
+                        response = dataNode_stub.StoreBlock(block_data_msg)
+                        if response.success:
+                            print(f"Block {i} stored successfully.")
                         else:
-                            print(f"Block {block_location.block_id} stored successfully.")
+                            print(f"Failed to store block {i}.")
                     except grpc.RpcError as e:
-                                print(f"Failed to write content to {file_name}: {e}")
-
-        
+                        print(f"GRPC error: {e}")
+    
+                    shutil.rmtree(temp_dir)
+                    
                 elif action == '3':
                     break
                 else:   
                     print("Invalid choice. Please enter a number between 1 and 3")
-                
+                        
 
         elif choice == '4':
             # Call Close here
