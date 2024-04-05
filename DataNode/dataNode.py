@@ -13,7 +13,7 @@ from Protobufs import Service_pb2
 from Protobufs import Service_pb2_grpc
 
 channel_nameNode = grpc.insecure_channel('localhost:50051')  # Replace with the address of the nameNode Leader bootstrap
-dataNode_stub = Service_pb2_grpc.DataNodeServiceStub(channel_nameNode)
+nameNode_stub = Service_pb2_grpc.DataNodeServiceStub(channel_nameNode)
 
 class DataNodeService(Service_pb2_grpc.DataNodeServiceServicer):
 
@@ -27,7 +27,7 @@ class DataNodeService(Service_pb2_grpc.DataNodeServiceServicer):
     def SendHeartbeat(self):
         while True:
             heartbeat = Service_pb2.DataNodeID(id="dataNode1") # replace dataNode1 bootstrap            
-            response = dataNode_stub.SendHeartbeat(heartbeat)
+            response = nameNode_stub.SendHeartbeat(heartbeat)
             print("Heartbeat sent")
             time.sleep(10)  # Wait for 10 seconds before sending the next heartbeat        
     
@@ -38,7 +38,7 @@ class DataNodeService(Service_pb2_grpc.DataNodeServiceServicer):
             print(f"Block {block_id} stored. Content: {data}")
             return Service_pb2.Status(success=True, message=f"Block {block_id} stored successfully")
 
-    def SendBlock(self, request, context):
+    def SendBlock(self, request, context): # (block_id, data, destination)
             block_id = request.id
             # Busca el ID del bloque en el diccionario de bloques almacenados
             if block_id in self.blocks:
@@ -51,7 +51,6 @@ class DataNodeService(Service_pb2_grpc.DataNodeServiceServicer):
                 context.set_details(f'Block {block_id} not found')
                 return Service_pb2.BlockData()
    
-
 
     def DeleteBlock(self, request, context): # (block_id)
         # Implementa la lógica para eliminar un bloque de datos del dataNode

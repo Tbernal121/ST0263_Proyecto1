@@ -31,12 +31,29 @@ class ClientService(Service_pb2_grpc.ClientServiceServicer):
         if file_name in index_DB:
             print(f"File {file_name} already exists")
             return Service_pb2.DataNodeID(id=None)
-
         data_node_id = "dataNode_id1"  # Replace with the address of the DataNode --> bootstrap
         index_DB[file_name] = {"datanode_id": data_node_id, "blocks": list(range(num_blocks))}
         # Return the DataNode assignment to the client
         return Service_pb2.DataNodeID(id=file_name)
     
+    def GetBlockLocations(self, request, context):
+        print("pasa por aquí #1")
+        file_name = request.name        
+        if file_name in index_DB: 
+            print("pasa por aquí #2")
+            file_info = index_DB[file_name]
+            block_locations = []
+            for block_id in file_info['blocks']:
+                dataNode_id = file_info['datanode_id']
+                print("pasa por aquí #3")
+                block_location = Service_pb2.BlockLocation(block_id=block_id, dataNode_id=dataNode_id)
+                print("pasa por aquí #4")
+                block_locations.append(block_location)
+                print(f'locations: {block_locations}')                
+            print("pasa por aquí #5")
+            return Service_pb2.BlockLocations(locations=block_locations)
+        else:
+            return Service_pb2.Status(success=False, message=f"File {file_name} not found")
 
     def Open(self, request, context):
         return super().Open(request, context)

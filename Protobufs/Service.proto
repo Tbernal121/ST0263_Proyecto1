@@ -3,19 +3,18 @@ syntax = "proto3";
 service ClientService {
     rpc ListFiles(Empty) returns (FileList) {}
     rpc CreateFile(FileInfo) returns (DataNodeID) {}
-    rpc Open(FilePath) returns (Status) {}
-    rpc Close(FilePath) returns (Status) {}
-    rpc Read(FilePath) returns (FileData) {}
+    rpc GetBlockLocations(FileName) returns (BlockLocations) {}
+    rpc Open(FileName) returns (Status) {}
+    rpc Close(FileName) returns (Status) {}
+    rpc Read(FileName) returns (FileData) {}
     rpc Write(FileData) returns (Status) {}
-    rpc FilePartition(FilePath) returns (PartitionedFile) {}
+    rpc FilePartition(FileName) returns (PartitionedFile) {}
     rpc JoinPartitionedFiles(PartitionedFile) returns (FileData) {}
   }
   
   service NameNodeService {
-    rpc Create(FilePath) returns (Status) {}
     rpc AllocateBlocks(FileData) returns (BlockAllocation) {}
     rpc Append(FileData) returns (Status) {}
-    rpc GetBlockLocations(FilePath) returns (BlockLocations) {}
     rpc RegisterDataNode(DataNodeInfo) returns (Status) {}
     rpc DataNodeHeartbeat(DataNodeStatus) returns (Status) {}
     rpc RelocateBlocks(BlockRelocation) returns (Status) {}
@@ -36,8 +35,8 @@ message FileList {
   repeated string files = 1;
 }
 
-message FilePath {
-  string path = 1;
+message FileName {
+  string name = 1;
 }
 
 message FileData {
@@ -63,6 +62,11 @@ message Status {
 message BlockAllocation {
   string name = 1;
   repeated string blockIds = 2;
+}
+
+message BlockLocation {
+  string block_id = 1;
+  string dataNode_id = 2;
 }
 
 message BlockLocations {

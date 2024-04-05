@@ -24,19 +24,24 @@ class ClientServiceStub(object):
                 request_serializer=Service__pb2.FileInfo.SerializeToString,
                 response_deserializer=Service__pb2.DataNodeID.FromString,
                 )
+        self.GetBlockLocations = channel.unary_unary(
+                '/ClientService/GetBlockLocations',
+                request_serializer=Service__pb2.FileName.SerializeToString,
+                response_deserializer=Service__pb2.BlockLocations.FromString,
+                )
         self.Open = channel.unary_unary(
                 '/ClientService/Open',
-                request_serializer=Service__pb2.FilePath.SerializeToString,
+                request_serializer=Service__pb2.FileName.SerializeToString,
                 response_deserializer=Service__pb2.Status.FromString,
                 )
         self.Close = channel.unary_unary(
                 '/ClientService/Close',
-                request_serializer=Service__pb2.FilePath.SerializeToString,
+                request_serializer=Service__pb2.FileName.SerializeToString,
                 response_deserializer=Service__pb2.Status.FromString,
                 )
         self.Read = channel.unary_unary(
                 '/ClientService/Read',
-                request_serializer=Service__pb2.FilePath.SerializeToString,
+                request_serializer=Service__pb2.FileName.SerializeToString,
                 response_deserializer=Service__pb2.FileData.FromString,
                 )
         self.Write = channel.unary_unary(
@@ -46,7 +51,7 @@ class ClientServiceStub(object):
                 )
         self.FilePartition = channel.unary_unary(
                 '/ClientService/FilePartition',
-                request_serializer=Service__pb2.FilePath.SerializeToString,
+                request_serializer=Service__pb2.FileName.SerializeToString,
                 response_deserializer=Service__pb2.PartitionedFile.FromString,
                 )
         self.JoinPartitionedFiles = channel.unary_unary(
@@ -66,6 +71,12 @@ class ClientServiceServicer(object):
         raise NotImplementedError('Method not implemented!')
 
     def CreateFile(self, request, context):
+        """Missing associated documentation comment in .proto file."""
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
+    def GetBlockLocations(self, request, context):
         """Missing associated documentation comment in .proto file."""
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
         context.set_details('Method not implemented!')
@@ -120,19 +131,24 @@ def add_ClientServiceServicer_to_server(servicer, server):
                     request_deserializer=Service__pb2.FileInfo.FromString,
                     response_serializer=Service__pb2.DataNodeID.SerializeToString,
             ),
+            'GetBlockLocations': grpc.unary_unary_rpc_method_handler(
+                    servicer.GetBlockLocations,
+                    request_deserializer=Service__pb2.FileName.FromString,
+                    response_serializer=Service__pb2.BlockLocations.SerializeToString,
+            ),
             'Open': grpc.unary_unary_rpc_method_handler(
                     servicer.Open,
-                    request_deserializer=Service__pb2.FilePath.FromString,
+                    request_deserializer=Service__pb2.FileName.FromString,
                     response_serializer=Service__pb2.Status.SerializeToString,
             ),
             'Close': grpc.unary_unary_rpc_method_handler(
                     servicer.Close,
-                    request_deserializer=Service__pb2.FilePath.FromString,
+                    request_deserializer=Service__pb2.FileName.FromString,
                     response_serializer=Service__pb2.Status.SerializeToString,
             ),
             'Read': grpc.unary_unary_rpc_method_handler(
                     servicer.Read,
-                    request_deserializer=Service__pb2.FilePath.FromString,
+                    request_deserializer=Service__pb2.FileName.FromString,
                     response_serializer=Service__pb2.FileData.SerializeToString,
             ),
             'Write': grpc.unary_unary_rpc_method_handler(
@@ -142,7 +158,7 @@ def add_ClientServiceServicer_to_server(servicer, server):
             ),
             'FilePartition': grpc.unary_unary_rpc_method_handler(
                     servicer.FilePartition,
-                    request_deserializer=Service__pb2.FilePath.FromString,
+                    request_deserializer=Service__pb2.FileName.FromString,
                     response_serializer=Service__pb2.PartitionedFile.SerializeToString,
             ),
             'JoinPartitionedFiles': grpc.unary_unary_rpc_method_handler(
@@ -195,6 +211,23 @@ class ClientService(object):
             insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
 
     @staticmethod
+    def GetBlockLocations(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(request, target, '/ClientService/GetBlockLocations',
+            Service__pb2.FileName.SerializeToString,
+            Service__pb2.BlockLocations.FromString,
+            options, channel_credentials,
+            insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
+
+    @staticmethod
     def Open(request,
             target,
             options=(),
@@ -206,7 +239,7 @@ class ClientService(object):
             timeout=None,
             metadata=None):
         return grpc.experimental.unary_unary(request, target, '/ClientService/Open',
-            Service__pb2.FilePath.SerializeToString,
+            Service__pb2.FileName.SerializeToString,
             Service__pb2.Status.FromString,
             options, channel_credentials,
             insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
@@ -223,7 +256,7 @@ class ClientService(object):
             timeout=None,
             metadata=None):
         return grpc.experimental.unary_unary(request, target, '/ClientService/Close',
-            Service__pb2.FilePath.SerializeToString,
+            Service__pb2.FileName.SerializeToString,
             Service__pb2.Status.FromString,
             options, channel_credentials,
             insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
@@ -240,7 +273,7 @@ class ClientService(object):
             timeout=None,
             metadata=None):
         return grpc.experimental.unary_unary(request, target, '/ClientService/Read',
-            Service__pb2.FilePath.SerializeToString,
+            Service__pb2.FileName.SerializeToString,
             Service__pb2.FileData.FromString,
             options, channel_credentials,
             insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
@@ -274,7 +307,7 @@ class ClientService(object):
             timeout=None,
             metadata=None):
         return grpc.experimental.unary_unary(request, target, '/ClientService/FilePartition',
-            Service__pb2.FilePath.SerializeToString,
+            Service__pb2.FileName.SerializeToString,
             Service__pb2.PartitionedFile.FromString,
             options, channel_credentials,
             insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
@@ -306,11 +339,6 @@ class NameNodeServiceStub(object):
         Args:
             channel: A grpc.Channel.
         """
-        self.Create = channel.unary_unary(
-                '/NameNodeService/Create',
-                request_serializer=Service__pb2.FilePath.SerializeToString,
-                response_deserializer=Service__pb2.Status.FromString,
-                )
         self.AllocateBlocks = channel.unary_unary(
                 '/NameNodeService/AllocateBlocks',
                 request_serializer=Service__pb2.FileData.SerializeToString,
@@ -320,11 +348,6 @@ class NameNodeServiceStub(object):
                 '/NameNodeService/Append',
                 request_serializer=Service__pb2.FileData.SerializeToString,
                 response_deserializer=Service__pb2.Status.FromString,
-                )
-        self.GetBlockLocations = channel.unary_unary(
-                '/NameNodeService/GetBlockLocations',
-                request_serializer=Service__pb2.FilePath.SerializeToString,
-                response_deserializer=Service__pb2.BlockLocations.FromString,
                 )
         self.RegisterDataNode = channel.unary_unary(
                 '/NameNodeService/RegisterDataNode',
@@ -346,12 +369,6 @@ class NameNodeServiceStub(object):
 class NameNodeServiceServicer(object):
     """Missing associated documentation comment in .proto file."""
 
-    def Create(self, request, context):
-        """Missing associated documentation comment in .proto file."""
-        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
-        context.set_details('Method not implemented!')
-        raise NotImplementedError('Method not implemented!')
-
     def AllocateBlocks(self, request, context):
         """Missing associated documentation comment in .proto file."""
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
@@ -359,12 +376,6 @@ class NameNodeServiceServicer(object):
         raise NotImplementedError('Method not implemented!')
 
     def Append(self, request, context):
-        """Missing associated documentation comment in .proto file."""
-        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
-        context.set_details('Method not implemented!')
-        raise NotImplementedError('Method not implemented!')
-
-    def GetBlockLocations(self, request, context):
         """Missing associated documentation comment in .proto file."""
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
         context.set_details('Method not implemented!')
@@ -391,11 +402,6 @@ class NameNodeServiceServicer(object):
 
 def add_NameNodeServiceServicer_to_server(servicer, server):
     rpc_method_handlers = {
-            'Create': grpc.unary_unary_rpc_method_handler(
-                    servicer.Create,
-                    request_deserializer=Service__pb2.FilePath.FromString,
-                    response_serializer=Service__pb2.Status.SerializeToString,
-            ),
             'AllocateBlocks': grpc.unary_unary_rpc_method_handler(
                     servicer.AllocateBlocks,
                     request_deserializer=Service__pb2.FileData.FromString,
@@ -405,11 +411,6 @@ def add_NameNodeServiceServicer_to_server(servicer, server):
                     servicer.Append,
                     request_deserializer=Service__pb2.FileData.FromString,
                     response_serializer=Service__pb2.Status.SerializeToString,
-            ),
-            'GetBlockLocations': grpc.unary_unary_rpc_method_handler(
-                    servicer.GetBlockLocations,
-                    request_deserializer=Service__pb2.FilePath.FromString,
-                    response_serializer=Service__pb2.BlockLocations.SerializeToString,
             ),
             'RegisterDataNode': grpc.unary_unary_rpc_method_handler(
                     servicer.RegisterDataNode,
@@ -435,23 +436,6 @@ def add_NameNodeServiceServicer_to_server(servicer, server):
  # This class is part of an EXPERIMENTAL API.
 class NameNodeService(object):
     """Missing associated documentation comment in .proto file."""
-
-    @staticmethod
-    def Create(request,
-            target,
-            options=(),
-            channel_credentials=None,
-            call_credentials=None,
-            insecure=False,
-            compression=None,
-            wait_for_ready=None,
-            timeout=None,
-            metadata=None):
-        return grpc.experimental.unary_unary(request, target, '/NameNodeService/Create',
-            Service__pb2.FilePath.SerializeToString,
-            Service__pb2.Status.FromString,
-            options, channel_credentials,
-            insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
 
     @staticmethod
     def AllocateBlocks(request,
@@ -484,23 +468,6 @@ class NameNodeService(object):
         return grpc.experimental.unary_unary(request, target, '/NameNodeService/Append',
             Service__pb2.FileData.SerializeToString,
             Service__pb2.Status.FromString,
-            options, channel_credentials,
-            insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
-
-    @staticmethod
-    def GetBlockLocations(request,
-            target,
-            options=(),
-            channel_credentials=None,
-            call_credentials=None,
-            insecure=False,
-            compression=None,
-            wait_for_ready=None,
-            timeout=None,
-            metadata=None):
-        return grpc.experimental.unary_unary(request, target, '/NameNodeService/GetBlockLocations',
-            Service__pb2.FilePath.SerializeToString,
-            Service__pb2.BlockLocations.FromString,
             options, channel_credentials,
             insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
 
