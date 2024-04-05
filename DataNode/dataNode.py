@@ -54,7 +54,16 @@ class DataNodeService(Service_pb2_grpc.DataNodeServiceServicer):
 
     def DeleteBlock(self, request, context): # (block_id)
         # Implementa la lógica para eliminar un bloque de datos del dataNode
-        pass
+         block_id = request.id
+         if block_id in self.blocks:
+               # Si el bloque existe, eliminarlo
+               del self.blocks[block_id]
+               print(f"Block {block_id} deleted successfully.")
+               return Service_pb2.Status(success=True, message=f"Block {block_id} deleted successfully")
+         else:
+               # Si el bloque no existe, retornar un mensaje de error
+               print(f"Block {block_id} not found.")
+               return Service_pb2.Status(success=False, message=f"Block {block_id} not found"
 
     def CleanStart(self, request, context):
         # Implementa la lógica para borrar todo lo que tiene y conectarse como un dataNode nuevo
