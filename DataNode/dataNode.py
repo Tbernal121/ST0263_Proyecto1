@@ -63,7 +63,7 @@ class DataNodeService(Service_pb2_grpc.DataNodeServiceServicer):
          else:
                # Si el bloque no existe, retornar un mensaje de error
                print(f"Block {block_id} not found.")
-               return Service_pb2.Status(success=False, message=f"Block {block_id} not found"
+               return Service_pb2.Status(success=False, message=f"Block {block_id} not found")
 
     def CleanStart(self, request, context):
         # Implementa la lógica para borrar todo lo que tiene y conectarse como un dataNode nuevo
