@@ -4,7 +4,7 @@ import os
 import sys
 import tempfile
 import partitionManagement
-import shutil
+import time
 
 current_dir = os.path.dirname(os.path.abspath(__file__))
 parent_dir = os.path.dirname(current_dir)
@@ -93,39 +93,37 @@ def run():
                         file_data = partitionManagement.join_partitioned_files(temp_dir, f'reconstructed_{file_name}.txt')#f'reconstructed_{temp_dir}.txt'
                 
                 elif action == '2':
-                    data_to_write = input("Enter the content to write into the file: ").encode()  
-                    temp_dir = tempfile.mkdtemp()
-                    temp_file_path = os.path.join(temp_dir, "temp_file_to_write")
-                    with open(temp_file_path, 'wb') as temp_file:
-                        temp_file.write(data_to_write)
-                    blocks = partitionManagement.file_partition(temp_file_path)
-
-    # Solicitar al NameNode que cree el archivo y determine la ubicación de los bloques
-                    try:
-                        file_info = Service_pb2.FileInfo(name=file_name, num_blocks=len(blocks))
-                        dataNodeID = nameNode_stub.CreateFile(file_info)
-                        if dataNodeID.id == "":
-                            print(f"Failed to create file {file_name}")
-                            continue
-
-        # Asignar cada bloque a un DataNode según la respuesta del NameNode
-                        for i, block in enumerate(blocks):
-                        # Asumiendo que cada bloque es enviado al mismo DataNode para simplificar. En un caso real, podrías tener diferentes DataNodes para cada bloque.
-                            dataNode_stub = get_dataNode_stub(dataNodeID.id)
-
-            # Crear un mensaje BlockData con el ID y los datos
-                        block_data_msg = Service_pb2.BlockData(id=f"{file_name}_block_{i}", data=block)
-
-            # Envía el bloque al DataNode
-                        response = dataNode_stub.StoreBlock(block_data_msg)
-                        if response.success:
-                            print(f"Block {i} stored successfully.")
-                        else:
-                            print(f"Failed to store block {i}.")
-                    except grpc.RpcError as e:
-                        print(f"GRPC error: {e}")
-    
-                    shutil.rmtree(temp_dir)
+                    new_text = input("Enter the text to add: ")
+                    new_text_bytes = new_text.encode('utf-8')
+                    # Obtener la ubicación de los bloques actuales del archivo
+                    block_locations_map = nameNode_stub.GetBlockLocations(Service_pb2.FileName(name=file_name))
+                    if not block_locations_map.locations:
+                         print("File not found.")
+                         continue  # Regresa al menú principal si el archivo no se encuentra
+                     
+                    # Supongamos que seleccionamos el siguiente DataNode de manera rotativa o basado en alguna lógica
+                    dataNode_id = f"datanode_id{((len(block_locations_map.locations) % 5) + 1)}"  # Ejemplo simple de rotación
+                    dataNode_stub = get_dataNode_stub("datanode_id1")
+                    
+                    # Genera un nuevo ID de bloque basado en un esquema de nomenclatura o un identificador único
+                    new_block_id = f"new_block_{int(time.time())}"  # Ejemplo de generación de un nuevo block_id
+                    
+                    # Almacenar el nuevo bloque en el DataNode seleccionado
+                    block_data = Service_pb2.BlockData(id=new_block_id, data=new_text_bytes)
+                    response = dataNode_stub.StoreBlock(block_data)
+                    
+                    if not response.success:
+                        print("Failed to store the new block.")
+                        continue
+                    # Actualizar la lista de bloques del archivo en el NameNode
+                    blocks_id = [location.block_id for location in block_locations_map.locations]
+                    blocks_id.append(new_block_id)  # Añade el nuevo ID de bloque a la lista
+                    
+                    update_response = nameNode_stub.UpdateFileBlocks(Service_pb2.FileInfo(name=file_name, blocks_id=blocks_id))
+                    if not update_response.success:
+                        print("Failed to update the file's block list in the NameNode.")
+                    else:
+                        print("Text added successfully to the file.")
                     
                 elif action == '3':
                     break

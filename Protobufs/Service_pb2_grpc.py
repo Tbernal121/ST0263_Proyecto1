@@ -59,6 +59,11 @@ class ClientServiceStub(object):
                 request_serializer=Service__pb2.PartitionedFile.SerializeToString,
                 response_deserializer=Service__pb2.FileData.FromString,
                 )
+        self.UpdateFileBlocks = channel.unary_unary(
+                '/ClientService/UpdateFileBlocks',
+                request_serializer=Service__pb2.FileInfo.SerializeToString,
+                response_deserializer=Service__pb2.Status.FromString,
+                )
 
 
 class ClientServiceServicer(object):
@@ -118,6 +123,12 @@ class ClientServiceServicer(object):
         context.set_details('Method not implemented!')
         raise NotImplementedError('Method not implemented!')
 
+    def UpdateFileBlocks(self, request, context):
+        """Missing associated documentation comment in .proto file."""
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
 
 def add_ClientServiceServicer_to_server(servicer, server):
     rpc_method_handlers = {
@@ -165,6 +176,11 @@ def add_ClientServiceServicer_to_server(servicer, server):
                     servicer.JoinPartitionedFiles,
                     request_deserializer=Service__pb2.PartitionedFile.FromString,
                     response_serializer=Service__pb2.FileData.SerializeToString,
+            ),
+            'UpdateFileBlocks': grpc.unary_unary_rpc_method_handler(
+                    servicer.UpdateFileBlocks,
+                    request_deserializer=Service__pb2.FileInfo.FromString,
+                    response_serializer=Service__pb2.Status.SerializeToString,
             ),
     }
     generic_handler = grpc.method_handlers_generic_handler(
@@ -326,6 +342,23 @@ class ClientService(object):
         return grpc.experimental.unary_unary(request, target, '/ClientService/JoinPartitionedFiles',
             Service__pb2.PartitionedFile.SerializeToString,
             Service__pb2.FileData.FromString,
+            options, channel_credentials,
+            insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
+
+    @staticmethod
+    def UpdateFileBlocks(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(request, target, '/ClientService/UpdateFileBlocks',
+            Service__pb2.FileInfo.SerializeToString,
+            Service__pb2.Status.FromString,
             options, channel_credentials,
             insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
 

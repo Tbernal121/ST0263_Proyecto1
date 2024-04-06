@@ -10,6 +10,7 @@ service ClientService {
     rpc Write(FileData) returns (Status) {}
     rpc FilePartition(FileName) returns (PartitionedFile) {}
     rpc JoinPartitionedFiles(PartitionedFile) returns (FileData) {}
+    rpc UpdateFileBlocks(FileInfo) returns (Status) {}
   }
   
   service NameNodeService {
