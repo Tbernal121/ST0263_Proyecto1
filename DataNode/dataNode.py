@@ -4,7 +4,9 @@ import os
 import sys
 import time
 import threading
+from dotenv import load_dotenv
 
+load_dotenv() # Load enviroment variables
 current_dir = os.path.dirname(os.path.abspath(__file__))
 parent_dir = os.path.dirname(current_dir)
 sys.path.append(parent_dir)
@@ -12,7 +14,7 @@ sys.path.append(parent_dir)
 from Protobufs import Service_pb2
 from Protobufs import Service_pb2_grpc
 
-channel_nameNode = grpc.insecure_channel('localhost:50051')  # Replace with the address of the nameNode Leader bootstrap
+channel_nameNode = grpc.insecure_channel(f'localhost:{os.getenv("NAMENODE_PORT")}')  # Address of the nameNode Leader
 nameNode_stub = Service_pb2_grpc.DataNodeServiceStub(channel_nameNode)
 
 class DataNodeService(Service_pb2_grpc.DataNodeServiceServicer):
@@ -35,7 +37,7 @@ class DataNodeService(Service_pb2_grpc.DataNodeServiceServicer):
        
     def SendHeartbeat(self):
         while True:
-            heartbeat = Service_pb2.DataNodeID(id="dataNode1") # replace dataNode1 bootstrap            
+            heartbeat = Service_pb2.DataNodeID(id=os.getenv("PORT"))
             response = nameNode_stub.SendHeartbeat(heartbeat)
             print("Heartbeat sent")
             time.sleep(10)  # Wait for 10 seconds before sending the next heartbeat        
@@ -86,7 +88,7 @@ def serve():
     service_dataNode = DataNodeService()
     server = grpc.server(futures.ThreadPoolExecutor(max_workers=10))
     Service_pb2_grpc.add_DataNodeServiceServicer_to_server(service_dataNode, server)
-    server.add_insecure_port('[::]:50052')
+    server.add_insecure_port(f'[::]:{port}')
     server.start()
     # Start the SendHeartbeat method in a separate thread
     heartbeat_thread = threading.Thread(target=service_dataNode.SendHeartbeat)
@@ -94,4 +96,5 @@ def serve():
     server.wait_for_termination()
 
 if __name__ == '__main__':
+    port = str(os.getenv("PORT"))
     serve()

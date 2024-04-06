@@ -14,21 +14,7 @@ sys.path.append(parent_dir)
 from Protobufs import Service_pb2
 from Protobufs import Service_pb2_grpc
 
-# this dictionary will be in nameNode Class
-dataNode_addresses = {
-    "datanode_id1": "localhost:50052",
-    "datanode_id2": "localhost:50053",
-    "datanode_id3": "localhost:50054",
-    "datanode_id4": "localhost:50055",
-    "datanode_id5": "localhost:50056",
-}
 
-# Takes a DataNode address and returns a stub to communicate with that DataNode
-def get_dataNode_stub(dataNode_id):
-    dataNode_address = dataNode_addresses[dataNode_id]
-    channel = grpc.insecure_channel(dataNode_address)
-    stub = Service_pb2_grpc.DataNodeServiceStub(channel)
-    return stub
 
 
 def run():
@@ -48,14 +34,13 @@ def run():
             response = nameNode_stub.ListFiles(Service_pb2.Empty())
             print("Files list: " + ', '.join(response.files))
 
-        elif choice == '2':
-            channel_dataNode = grpc.insecure_channel('localhost:50052') # Replace with the address of the nameNode Leader bootstrap
-            dataNode_stub = Service_pb2_grpc.DataNodeServiceStub(channel_dataNode)
+        elif choice == '2':            
             file_name = input("Enter the name of the file to create: ")
             blocks = partitionManagement.file_partition(f'files/{file_name}')
             file_data = Service_pb2.FileInfo(name=file_name, blocks_id=blocks)
-            response = nameNode_stub.CreateFile(file_data)
-
+            dataNode_id = nameNode_stub.CreateFile(file_data)
+            channel_dataNode = grpc.insecure_channel(f'localhost:{dataNode_id.id}')
+            dataNode_stub = Service_pb2_grpc.DataNodeServiceStub(channel_dataNode)
             # Send each block to the DataNode         
             for i, block in enumerate(blocks):
                 block_file_path = os.path.join(f'{file_name}_dir{block}')                
@@ -82,7 +67,9 @@ def run():
                         for block_locations in block_locations_map.locations:
                             block_id = block_locations.block_id
                             dataNode_id = block_locations.dataNode_id
-                            dataNode_stub = get_dataNode_stub(dataNode_id) # takes a DataNode address and returns a stub to communicate with that DataNode
+                            channel_dataNode = nameNode_stub.GetDataNodeStub(Service_pb2.DataNodeID(id=dataNode_id)) # takes a DataNode address and returns a stub to communicate with that DataNode
+                            channel_dataNode = grpc.insecure_channel(channel_dataNode.channel)
+                            dataNode_stub = Service_pb2_grpc.DataNodeServiceStub(channel_dataNode)
                             block_request = Service_pb2.BlockId(id=block_id)
                             block = dataNode_stub.SendBlock(block_request)
                             # Write each block to a file in the temporary directory
@@ -104,7 +91,8 @@ def run():
                     
                     # Supongamos que seleccionamos el siguiente DataNode de manera rotativa o basado en alguna lógica
                     last_dataNode_id = block_locations_map.locations[-1].dataNode_id
-                    dataNode_stub = get_dataNode_stub(last_dataNode_id)
+                    dataNode_stub = nameNode_stub.GetDataNodeStub(Service_pb2.DataNodeID(id=last_dataNode_id))
+                    dataNode_stub = dataNode_stub.stub
                      # Obtener el último bloque
                     last_block_id = block_locations_map.locations[-1].block_id                    
                     last_block_data = dataNode_stub.SendBlock(Service_pb2.BlockId(id=last_block_id))

@@ -29,6 +29,11 @@ class ClientServiceStub(object):
                 request_serializer=Service__pb2.FileName.SerializeToString,
                 response_deserializer=Service__pb2.BlockLocations.FromString,
                 )
+        self.GetDataNodeStub = channel.unary_unary(
+                '/ClientService/GetDataNodeStub',
+                request_serializer=Service__pb2.DataNodeID.SerializeToString,
+                response_deserializer=Service__pb2.Channel.FromString,
+                )
         self.Open = channel.unary_unary(
                 '/ClientService/Open',
                 request_serializer=Service__pb2.FileName.SerializeToString,
@@ -82,6 +87,12 @@ class ClientServiceServicer(object):
         raise NotImplementedError('Method not implemented!')
 
     def GetBlockLocations(self, request, context):
+        """Missing associated documentation comment in .proto file."""
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
+    def GetDataNodeStub(self, request, context):
         """Missing associated documentation comment in .proto file."""
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
         context.set_details('Method not implemented!')
@@ -146,6 +157,11 @@ def add_ClientServiceServicer_to_server(servicer, server):
                     servicer.GetBlockLocations,
                     request_deserializer=Service__pb2.FileName.FromString,
                     response_serializer=Service__pb2.BlockLocations.SerializeToString,
+            ),
+            'GetDataNodeStub': grpc.unary_unary_rpc_method_handler(
+                    servicer.GetDataNodeStub,
+                    request_deserializer=Service__pb2.DataNodeID.FromString,
+                    response_serializer=Service__pb2.Channel.SerializeToString,
             ),
             'Open': grpc.unary_unary_rpc_method_handler(
                     servicer.Open,
@@ -240,6 +256,23 @@ class ClientService(object):
         return grpc.experimental.unary_unary(request, target, '/ClientService/GetBlockLocations',
             Service__pb2.FileName.SerializeToString,
             Service__pb2.BlockLocations.FromString,
+            options, channel_credentials,
+            insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
+
+    @staticmethod
+    def GetDataNodeStub(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(request, target, '/ClientService/GetDataNodeStub',
+            Service__pb2.DataNodeID.SerializeToString,
+            Service__pb2.Channel.FromString,
             options, channel_credentials,
             insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
 

@@ -4,6 +4,7 @@ service ClientService {
     rpc ListFiles(Empty) returns (FileList) {}
     rpc CreateFile(FileInfo) returns (DataNodeID) {}
     rpc GetBlockLocations(FileName) returns (BlockLocations) {}
+    rpc GetDataNodeStub(DataNodeID) returns (Channel) {}
     rpc Open(FileName) returns (Status) {}
     rpc Close(FileName) returns (Status) {}
     rpc Read(FileName) returns (FileData) {}
@@ -96,6 +97,10 @@ message BlockId {
 
 message DataNodeID {
   string id = 1;
+}
+
+message Channel {
+  string channel = 1;
 }
 
 message BlockData {

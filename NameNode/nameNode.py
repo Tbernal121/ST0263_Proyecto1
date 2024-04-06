@@ -12,12 +12,22 @@ from Protobufs import Service_pb2
 from Protobufs import Service_pb2_grpc
 
 index_DB = {
-    "file1": {"datanode_id": "datanode_id1", "blocks": ["block_id1", "block_id2", "block_id3", "block_id4", "block_id5", "block_id6", "block_id7", "block_id8", "block_id9", "block_id10", "block_id11", "block_id12"]},
+    "file1": {"datanode_id": "50052", "blocks": ["block_id1", "block_id2", "block_id3", "block_id4", "block_id5", "block_id6", "block_id7", "block_id8", "block_id9", "block_id10", "block_id11", "block_id12"]},
     "file2": {"datanode_id": "datanode_id2", "blocks": ["block_id4", "block_id5", "block_id6"]},
     "file3": {"datanode_id": "datanode_id3", "blocks": ["block_id7", "block_id8", "block_id9"]},
     "file4": {"datanode_id": "datanode_id4", "blocks": ["block_id10", "block_id11", "block_id12"]},
     "file5": {"datanode_id": "datanode_id5", "blocks": ["block_id13", "block_id14", "block_id15"]},
 }
+
+# live dataNodes
+dataNode_addresses = {
+    "50052": "localhost:50052",
+    "datanode_id2": "localhost:50053",
+    "datanode_id3": "localhost:50054",
+    "datanode_id4": "localhost:50055",
+    "datanode_id5": "localhost:50056",
+}
+
 
 class ClientService(Service_pb2_grpc.ClientServiceServicer):
     
@@ -31,10 +41,10 @@ class ClientService(Service_pb2_grpc.ClientServiceServicer):
         if file_name in index_DB:
             print(f"File {file_name} already exists")
             return Service_pb2.DataNodeID(id=None)
-        data_node_id = "datanode_id1"  # Replace with the address of the DataNode --> bootstrap
+        data_node_id = "50052"  # Replace with the address of the DataNode --> bootstrap. Round Robin
         index_DB[file_name] = {"datanode_id": data_node_id, "blocks": blocks_id}
         # Return the DataNode assignment to the client
-        return Service_pb2.DataNodeID(id=file_name)
+        return Service_pb2.DataNodeID(id=index_DB[file_name]["datanode_id"])
     
     def GetBlockLocations(self, request, context):
         file_name = request.name
@@ -48,6 +58,13 @@ class ClientService(Service_pb2_grpc.ClientServiceServicer):
             return Service_pb2.BlockLocations(locations=block_locations)
         else:
             return Service_pb2.Status(success=False, message=f"File {file_name} not found")
+        
+    # Takes a DataNode address and returns a stub to communicate with that DataNode
+    def GetDataNodeStub(self, request, context):
+        dataNode_id = request.id
+        dataNode_address = dataNode_addresses[dataNode_id]
+        channel = dataNode_address
+        return Service_pb2.Channel(channel = channel)
 
     def Open(self, request, context):
         return super().Open(request, context)
