@@ -28,20 +28,27 @@ dataNode_addresses = {
     "datanode_id5": "localhost:50056",
 }
 
-
+last_assigned = 0
 class ClientService(Service_pb2_grpc.ClientServiceServicer):
+    
     
     def ListFiles(self, request, context):
         file_names = list(index_DB.keys())
         return Service_pb2.FileList(files=file_names)
     
     def CreateFile(self, request, context):
+        global last_assigned
         file_name = request.name
         blocks_id = request.blocks_id
         if file_name in index_DB:
             print(f"File {file_name} already exists")
             return Service_pb2.DataNodeID(id=None)
-        data_node_id = "50052"  # Replace with the address of the DataNode --> bootstrap. Round Robin
+        
+        # Get the next DataNode in Round Robin order
+        data_node_id = list(dataNode_addresses.keys())[last_assigned] # "50052"
+        print(f"dataNode asignado por el Round Robin: {data_node_id}")
+        last_assigned = (last_assigned + 1) % len(dataNode_addresses)
+
         index_DB[file_name] = {"datanode_id": data_node_id, "blocks": blocks_id}
         # Return the DataNode assignment to the client
         return Service_pb2.DataNodeID(id=index_DB[file_name]["datanode_id"])
@@ -87,14 +94,12 @@ class DataNodeService(Service_pb2_grpc.DataNodeServiceServicer):
         self.data_nodes[data_node_id] = time.time()  # Add the new DataNode to the dictionary
         print(f"Initial contact from {data_node_id}")
         dataNode_addresses[data_node_id] = f"localhost:{data_node_id}"
-        print(f"dataNode_address: {dataNode_addresses}")
         return Service_pb2.Status(success=True, message=f"Initial contact from {data_node_id} successfully recieved")
     
     def SendHeartbeat(self, request, context):
         data_node_id = request.id
         self.data_nodes[data_node_id] = time.time()  # Update the last heartbeat time
         print(f"Heartbeat received from {data_node_id}")
-        print(self.data_nodes)
         return Service_pb2.Status(success=True, message=f"Heartbeat from {data_node_id} successfully recieved")
 
 
