@@ -32,15 +32,14 @@ def get_dataNode_stub(dataNode_id):
 
 
 def run():
-    channel_nameNode = grpc.insecure_channel('localhost:50051') # Replace with the address of your nameNode Leader bootstrap
+    channel_nameNode = grpc.insecure_channel('localhost:50051') # Replace with the address of the nameNode Leader bootstrap
     nameNode_stub = Service_pb2_grpc.ClientServiceStub(channel_nameNode)
-    #dataNode_stub = Service_pb2_grpc.DataNodeServiceStub(channel_dataNode)
 
     while True:
         print("\nMenu:")
-        print("1. List files") # mostrar todos los nombres de los archivos que hay en el sistema
-        print("2. Create file") # es como hacer mkdir. (file_name, data)
-        print("3. Open file to read or write") # es como hacer cd directory_name. (directory_name)
+        print("1. List files")
+        print("2. Create file")
+        print("3. Open file to read or write")
         print("4. Exit")
 
         choice = input("Enter your choice: ")
@@ -50,7 +49,7 @@ def run():
             print("Files list: " + ', '.join(response.files))
 
         elif choice == '2':
-            channel_dataNode = grpc.insecure_channel('localhost:50052') # Replace with the address of your nameNode Leader bootstrap
+            channel_dataNode = grpc.insecure_channel('localhost:50052') # Replace with the address of the nameNode Leader bootstrap
             dataNode_stub = Service_pb2_grpc.DataNodeServiceStub(channel_dataNode)
             file_name = input("Enter the name of the file to create: ")
             blocks = partitionManagement.file_partition(f'files/{file_name}')
@@ -64,7 +63,7 @@ def run():
                     block_content = block_file.read()
                 block_data = Service_pb2.BlockData(id=block, data=block_content)
                 response = dataNode_stub.StoreBlock(block_data)
-            # then delete the block's directory
+            # Delete the block's directory
             shutil.rmtree(f"{file_name}_dir")
 
         elif choice == '3':
@@ -72,6 +71,8 @@ def run():
                 file_name = input("Enter the name of the file: ")
                 # check if the file exist
                 action = input("Press 1 to read, 2 to write and 3 to close file: ")
+
+                # Read Logic
                 if action == '1':
                     blocks = []
                     block_locations_map = nameNode_stub.GetBlockLocations(Service_pb2.FileName(name=file_name))
@@ -89,9 +90,9 @@ def run():
                                 block_file.write(block.data)
                             i+=1
                         
-                        # pass the temporary directory to join_partitioned_files
-                        file_data = partitionManagement.join_partitioned_files(temp_dir, f'reconstructed_{file_name}.txt')#f'reconstructed_{temp_dir}.txt'
-                
+                        file_data = partitionManagement.join_partitioned_files(temp_dir, f'reconstructed_{file_name}.txt')
+                 
+                # Write Logic
                 elif action == '2':
                     new_text = input("Enter the text to add: ")
                     new_text_bytes = new_text.encode('utf-8')
@@ -100,17 +101,30 @@ def run():
                     if not block_locations_map.locations:
                          print("File not found.")
                          continue  # Regresa al menú principal si el archivo no se encuentra
-                     
+                    
                     # Supongamos que seleccionamos el siguiente DataNode de manera rotativa o basado en alguna lógica
-                    dataNode_id = f"datanode_id{((len(block_locations_map.locations) % 5) + 1)}"  # Ejemplo simple de rotación
-                    dataNode_stub = get_dataNode_stub("datanode_id1")
-                    
-                    # Genera un nuevo ID de bloque basado en un esquema de nomenclatura o un identificador único
-                    new_block_id = f"new_block_{int(time.time())}"  # Ejemplo de generación de un nuevo block_id
-                    
-                    # Almacenar el nuevo bloque en el DataNode seleccionado
-                    block_data = Service_pb2.BlockData(id=new_block_id, data=new_text_bytes)
-                    response = dataNode_stub.StoreBlock(block_data)
+                    last_dataNode_id = block_locations_map.locations[-1].dataNode_id
+                    dataNode_stub = get_dataNode_stub(last_dataNode_id)
+                     # Obtener el último bloque
+                    last_block_id = block_locations_map.locations[-1].block_id                    
+                    last_block_data = dataNode_stub.SendBlock(Service_pb2.BlockId(id=last_block_id))
+
+                    # Verificar si el último bloque tiene espacio para más datos
+                    if len(last_block_data.data) + len(new_text.encode('utf-8')) <= 1024*1024: # max block size = (1mb)
+                        # Si hay espacio, añadir el nuevo texto al último bloque
+                        updated_block_data = Service_pb2.BlockData(id=last_block_id, data=last_block_data.data + new_text)
+                        response = dataNode_stub.StoreBlock(updated_block_data)
+                        if not response.success:
+                            print("Failed to update the last block.")
+                            continue
+                        new_block_id = last_block_id
+                    else:                      
+                        # Genera un nuevo ID de bloque basado en un esquema de nomenclatura o un identificador único
+                        new_block_id = f"new_block_{int(time.time())}"  # Ejemplo de generación de un nuevo block_id
+                        #new_block_id = f'/part-{block_num:04d}'  # Generación de un nuevo block_id
+                        # Almacenar el nuevo bloque en el DataNode seleccionado
+                        block_data = Service_pb2.BlockData(id=new_block_id, data=new_text)
+                        response = dataNode_stub.StoreBlock(block_data)
                     
                     if not response.success:
                         print("Failed to store the new block.")
