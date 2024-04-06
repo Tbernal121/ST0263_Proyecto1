@@ -12,7 +12,7 @@ from Protobufs import Service_pb2
 from Protobufs import Service_pb2_grpc
 
 index_DB = {
-    "file1": {"datanode_id": "datanode_id1", "blocks": ["block_id1", "block_id2", "block_id3"]},
+    "file1": {"datanode_id": "datanode_id1", "blocks": ["block_id1", "block_id2", "block_id3", "block_id4", "block_id5", "block_id6", "block_id7", "block_id8", "block_id9", "block_id10", "block_id11", "block_id12"]},
     "file2": {"datanode_id": "datanode_id2", "blocks": ["block_id4", "block_id5", "block_id6"]},
     "file3": {"datanode_id": "datanode_id3", "blocks": ["block_id7", "block_id8", "block_id9"]},
     "file4": {"datanode_id": "datanode_id4", "blocks": ["block_id10", "block_id11", "block_id12"]},
@@ -27,12 +27,12 @@ class ClientService(Service_pb2_grpc.ClientServiceServicer):
     
     def CreateFile(self, request, context):
         file_name = request.name
-        num_blocks = request.num_blocks
+        blocks_id = request.blocks_id
         if file_name in index_DB:
             print(f"File {file_name} already exists")
             return Service_pb2.DataNodeID(id=None)
-        data_node_id = "dataNode_id1"  # Replace with the address of the DataNode --> bootstrap
-        index_DB[file_name] = {"datanode_id": data_node_id, "blocks": list(range(num_blocks))}
+        data_node_id = "datanode_id1"  # Replace with the address of the DataNode --> bootstrap
+        index_DB[file_name] = {"datanode_id": data_node_id, "blocks": blocks_id}
         # Return the DataNode assignment to the client
         return Service_pb2.DataNodeID(id=file_name)
     
@@ -45,7 +45,6 @@ class ClientService(Service_pb2_grpc.ClientServiceServicer):
                 dataNode_id = file_info['datanode_id']
                 block_location = Service_pb2.BlockLocation(block_id=block_id, dataNode_id=dataNode_id)
                 block_locations.append(block_location)
-            print(block_locations)
             return Service_pb2.BlockLocations(locations=block_locations)
         else:
             return Service_pb2.Status(success=False, message=f"File {file_name} not found")

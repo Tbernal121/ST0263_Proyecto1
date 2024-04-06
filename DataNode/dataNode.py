@@ -19,9 +19,18 @@ class DataNodeService(Service_pb2_grpc.DataNodeServiceServicer):
 
     def __init__(self):
         self.blocks = {
-            'block_id1': 'data del bloque 1',
-            'block_id2': 'data del bloque 2',
-            'block_id3': 'data del bloque 3',
+            'block_id1': '1 ',
+            'block_id2': '2 ',
+            'block_id3': '3 ',
+            'block_id4': '4 ',
+            'block_id5': '5 ',
+            'block_id6': '6 ',
+            'block_id7': '7 ',
+            'block_id8': '8 ',
+            'block_id9': '9 ',
+            'block_id10': '10 ',
+            'block_id11': '11 ',
+            'block_id12': '12 ',
         }        
        
     def SendHeartbeat(self):
@@ -35,7 +44,7 @@ class DataNodeService(Service_pb2_grpc.DataNodeServiceServicer):
             block_id = request.id
             data = request.data
             self.blocks[block_id] = data  # Store the data block
-            print(f"Block {block_id} stored. Content: {data}")
+            print(f"Block: {block_id} stored")
             return Service_pb2.Status(success=True, message=f"Block {block_id} stored successfully")
 
     def SendBlock(self, request, context): # (block_id, data, destination)
@@ -44,7 +53,7 @@ class DataNodeService(Service_pb2_grpc.DataNodeServiceServicer):
             if block_id in self.blocks:
                 data = self.blocks[block_id]
                 # Si se encuentra, devuelve los datos del bloque
-                print(f"se encontró el bloque id: {block_id}. data: {data}")
+                print(f"se encontró el bloque id: {block_id}. Sending...")
                 return Service_pb2.BlockData(id=block_id, data=data)
             else:
                 # Si no se encuentra, establece un código de error y un mensaje

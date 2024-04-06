@@ -46,7 +46,7 @@ message FileData {
 
 message FileInfo {
   string name = 1;
-  int32 num_blocks = 2;
+  repeated string blocks_id = 2;
 }
 
 message PartitionedFile {

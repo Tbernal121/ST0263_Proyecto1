@@ -13,30 +13,21 @@ def file_partition(file_name):
     with open(file_name, 'rb') as file:
         block = file.read(block_size)
         while block:
-            part_name = f"{destination_directory}/part-{block_num:04d}"
+            block_name = f'/part-{block_num:04d}'
+            part_name = f"{destination_directory}{block_name}"
             with open(part_name, 'wb') as part_file:
                 part_file.write(block)
-            #print(f"Block {part_name} created")
-            blocks.append(part_name)
+            blocks.append(block_name)
             block_num += 1
             block = file.read(block_size)
     
     return blocks
 
-'''def main():
-    file_name = input("Enter file name to partition: ")  # Replace this with the file name
-    file_partition(file_name)'''
 
-
-def join_partitioned_files(split_directory, destination_file_name):    
+def join_partitioned_files(split_directory, destination_file_name):
     parts = sorted(os.listdir(split_directory))
     with open(destination_file_name, 'wb') as destination_file:
         for part in parts:
             part_path = os.path.join(split_directory, part)
             with open(part_path, 'rb') as part_file:
-                destination_file.write(part_file.read())
-
-'''def main():
-    split_directory = input("Enter the directory: ")
-    destination_file_name = f"reconstructed_{split_directory}.txt"
-    join_partitioned_files(split_directory, destination_file_name)'''
+                destination_file.write(part_file.read())   

@@ -4,7 +4,7 @@ import os
 import sys
 import tempfile
 import partitionManagement
-
+import shutil
 
 current_dir = os.path.dirname(os.path.abspath(__file__))
 parent_dir = os.path.dirname(current_dir)
@@ -41,63 +41,56 @@ def run():
         print("1. List files") # mostrar todos los nombres de los archivos que hay en el sistema
         print("2. Create file") # es como hacer mkdir. (file_name, data)
         print("3. Open file to read or write") # es como hacer cd directory_name. (directory_name)
-        print("4. Close file") # es como hacer cd..  (directory_name)
-        print("5. Read file") # (file_name)
-        print("6. Write file") # (file_name)
-        print("7. Exit")     
+        print("4. Exit")
 
         choice = input("Enter your choice: ")
 
         if choice == '1':
             response = nameNode_stub.ListFiles(Service_pb2.Empty())
-            print("Client received: " + ', '.join(response.files))
+            print("Files list: " + ', '.join(response.files))
 
         elif choice == '2':
             channel_dataNode = grpc.insecure_channel('localhost:50052') # Replace with the address of your nameNode Leader bootstrap
             dataNode_stub = Service_pb2_grpc.DataNodeServiceStub(channel_dataNode)
-            file_name = input("Enter the name of the file to create: ")    
-
-            # Open the file in read mode
-            '''with open(f'files/{file_name}', 'r') as file:
-                file_content = file.read()
-            blocks = partitionManagement.file_partition(file_content)'''
+            file_name = input("Enter the name of the file to create: ")
             blocks = partitionManagement.file_partition(f'files/{file_name}')
-            file_data = Service_pb2.FileInfo(name=file_name, num_blocks=len(blocks))        
+            file_data = Service_pb2.FileInfo(name=file_name, blocks_id=blocks)
             response = nameNode_stub.CreateFile(file_data)
 
-            # Send each block to the DataNode
+            # Send each block to the DataNode         
             for i, block in enumerate(blocks):
-                block_data = Service_pb2.BlockData(id=block, data=f"{block} data")
+                block_file_path = os.path.join(f'{file_name}_dir{block}')                
+                with open(block_file_path, 'rb') as block_file:
+                    block_content = block_file.read()
+                block_data = Service_pb2.BlockData(id=block, data=block_content)
                 response = dataNode_stub.StoreBlock(block_data)
-                print(response.message)
             # then delete the block's directory
+            shutil.rmtree(f"{file_name}_dir")
 
-        elif choice == '3':        
+        elif choice == '3':
             while (True):
                 file_name = input("Enter the name of the file: ")
                 # check if the file exist
-                action = input("Press 1 to read, 2 to write and 3 to return: ")
+                action = input("Press 1 to read, 2 to write and 3 to close file: ")
                 if action == '1':
                     blocks = []
-                    block_locations_map = nameNode_stub.GetBlockLocations(Service_pb2.FileName(name=file_name))                
+                    block_locations_map = nameNode_stub.GetBlockLocations(Service_pb2.FileName(name=file_name))
                     # Create a temporary directory to store the blocks
                     with tempfile.TemporaryDirectory() as temp_dir:
-                        print("pasa por aqui #2")
+                        i = 0
                         for block_locations in block_locations_map.locations:
-                            print("pasa por aqui #3")
                             block_id = block_locations.block_id
                             dataNode_id = block_locations.dataNode_id
                             dataNode_stub = get_dataNode_stub(dataNode_id) # takes a DataNode address and returns a stub to communicate with that DataNode
-                            block_request = Service_pb2.BlockId(id=block_id)                            
+                            block_request = Service_pb2.BlockId(id=block_id)
                             block = dataNode_stub.SendBlock(block_request)
                             # Write each block to a file in the temporary directory
-                            with open(os.path.join(temp_dir, block_id), 'w') as block_file:
+                            with open(os.path.join(temp_dir, str(i).zfill(4)), 'w') as block_file:
                                 block_file.write(block.data)
+                            i+=1
+                        
                         # pass the temporary directory to join_partitioned_files
-                        print("pasa por aqui #4")
-                        file_data = partitionManagement.join_partitioned_files(temp_dir, f'reconstructed_{file_name}.txt')
-                        print("pasa por aqui #5")
-                        #print(file_data)
+                        file_data = partitionManagement.join_partitioned_files(temp_dir, f'reconstructed_{file_name}.txt')#f'reconstructed_{temp_dir}.txt'
                 
                 elif action == '2':
                     data_to_write = input("Enter the content to write into the file: ").encode()  
@@ -138,21 +131,13 @@ def run():
                     break
                 else:   
                     print("Invalid choice. Please enter a number between 1 and 3")
-                        
+                break
+                
 
         elif choice == '4':
-            # Call Close here
-            pass
-        elif choice == '5':
-            # Call Read here
-            pass
-        elif choice == '6':
-            # Call Write here
-            pass
-        elif choice == '7':
-            break         
+            break
         else:
-            print("Invalid choice. Please enter a number between 1 and 7")
+            print("Invalid choice. Please enter a number between 1 and 4")
 
 if __name__ == '__main__':
     run()
