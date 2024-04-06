@@ -603,6 +603,11 @@ class DataNodeServiceStub(object):
                 request_serializer=Service__pb2.DataNodeID.SerializeToString,
                 response_deserializer=Service__pb2.Status.FromString,
                 )
+        self.InitialContact = channel.unary_unary(
+                '/DataNodeService/InitialContact',
+                request_serializer=Service__pb2.DataNodeID.SerializeToString,
+                response_deserializer=Service__pb2.Status.FromString,
+                )
         self.StoreBlock = channel.unary_unary(
                 '/DataNodeService/StoreBlock',
                 request_serializer=Service__pb2.BlockData.SerializeToString,
@@ -634,6 +639,12 @@ class DataNodeServiceServicer(object):
     """Missing associated documentation comment in .proto file."""
 
     def SendHeartbeat(self, request, context):
+        """Missing associated documentation comment in .proto file."""
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
+    def InitialContact(self, request, context):
         """Missing associated documentation comment in .proto file."""
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
         context.set_details('Method not implemented!')
@@ -674,6 +685,11 @@ def add_DataNodeServiceServicer_to_server(servicer, server):
     rpc_method_handlers = {
             'SendHeartbeat': grpc.unary_unary_rpc_method_handler(
                     servicer.SendHeartbeat,
+                    request_deserializer=Service__pb2.DataNodeID.FromString,
+                    response_serializer=Service__pb2.Status.SerializeToString,
+            ),
+            'InitialContact': grpc.unary_unary_rpc_method_handler(
+                    servicer.InitialContact,
                     request_deserializer=Service__pb2.DataNodeID.FromString,
                     response_serializer=Service__pb2.Status.SerializeToString,
             ),
@@ -724,6 +740,23 @@ class DataNodeService(object):
             timeout=None,
             metadata=None):
         return grpc.experimental.unary_unary(request, target, '/DataNodeService/SendHeartbeat',
+            Service__pb2.DataNodeID.SerializeToString,
+            Service__pb2.Status.FromString,
+            options, channel_credentials,
+            insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
+
+    @staticmethod
+    def InitialContact(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(request, target, '/DataNodeService/InitialContact',
             Service__pb2.DataNodeID.SerializeToString,
             Service__pb2.Status.FromString,
             options, channel_credentials,

@@ -24,6 +24,7 @@ service ClientService {
   
   service DataNodeService {
     rpc SendHeartbeat(DataNodeID) returns (Status) {}
+    rpc InitialContact(DataNodeID) returns (Status) {}
     rpc StoreBlock(BlockData) returns (Status) {}
     rpc DeleteBlock(BlockId) returns (Status) {}
     rpc SendBlock(BlockId) returns (BlockData) {}

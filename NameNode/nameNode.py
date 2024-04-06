@@ -65,18 +65,6 @@ class ClientService(Service_pb2_grpc.ClientServiceServicer):
         dataNode_address = dataNode_addresses[dataNode_id]
         channel = dataNode_address
         return Service_pb2.Channel(channel = channel)
-
-    def Open(self, request, context):
-        return super().Open(request, context)
-    
-    def Close(self, request, context):
-        return super().Close(request, context)
-    
-    def Read(self, request, context):
-        return super().Read(request, context)
-    
-    def Write(self, request, context):
-        return super().Read(request, context)
     
     def UpdateFileBlocks(self, request, context):
         file_name = request.name
@@ -93,11 +81,20 @@ class DataNodeService(Service_pb2_grpc.DataNodeServiceServicer):
 
     def __init__(self):
         self.data_nodes = {}  # Dictionary to store the status of DataNodes
+
+    def InitialContact(self, request, context):
+        data_node_id = request.id
+        self.data_nodes[data_node_id] = time.time()  # Add the new DataNode to the dictionary
+        print(f"Initial contact from {data_node_id}")
+        dataNode_addresses[data_node_id] = f"localhost:{data_node_id}"
+        print(f"dataNode_address: {dataNode_addresses}")
+        return Service_pb2.Status(success=True, message=f"Initial contact from {data_node_id} successfully recieved")
     
     def SendHeartbeat(self, request, context):
         data_node_id = request.id
         self.data_nodes[data_node_id] = time.time()  # Update the last heartbeat time
         print(f"Heartbeat received from {data_node_id}")
+        print(self.data_nodes)
         return Service_pb2.Status(success=True, message=f"Heartbeat from {data_node_id} successfully recieved")
 
 

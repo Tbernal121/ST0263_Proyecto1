@@ -33,7 +33,12 @@ class DataNodeService(Service_pb2_grpc.DataNodeServiceServicer):
             'block_id10': '10 ',
             'block_id11': '11 ',
             'block_id12': '12 ',
-        }        
+        }
+
+    def InitialContact(self):
+        initial_contact = Service_pb2.DataNodeID(id=os.getenv("PORT"))
+        response = nameNode_stub.InitialContact(initial_contact)
+        print("Initial contact sent")
        
     def SendHeartbeat(self):
         while True:
@@ -62,7 +67,6 @@ class DataNodeService(Service_pb2_grpc.DataNodeServiceServicer):
                 print(f"no se encontró el bloque id: {block_id}")
                 return Service_pb2.BlockData()
    
-
     def DeleteBlock(self, request, context): # (block_id)
         # Implementa la lógica para eliminar un bloque de datos del dataNode
          block_id = request.id
@@ -90,6 +94,7 @@ def serve():
     Service_pb2_grpc.add_DataNodeServiceServicer_to_server(service_dataNode, server)
     server.add_insecure_port(f'[::]:{port}')
     server.start()
+    service_dataNode.InitialContact()
     # Start the SendHeartbeat method in a separate thread
     heartbeat_thread = threading.Thread(target=service_dataNode.SendHeartbeat)
     heartbeat_thread.start()    
