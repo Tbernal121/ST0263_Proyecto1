@@ -45,7 +45,7 @@ class DataNodeService(Service_pb2_grpc.DataNodeServiceServicer):
             heartbeat = Service_pb2.DataNodeID(id=os.getenv("PORT"))
             response = nameNode_stub.SendHeartbeat(heartbeat)
             print("Heartbeat sent")
-            time.sleep(10)  # Wait for 10 seconds before sending the next heartbeat        
+            time.sleep(10)  # Wait for 10 seconds before sending the next heartbeat
     
     def StoreBlock(self, request, context): # (block_id, data)
             block_id = request.id
@@ -97,7 +97,8 @@ def serve():
     service_dataNode.InitialContact()
     # Start the SendHeartbeat method in a separate thread
     heartbeat_thread = threading.Thread(target=service_dataNode.SendHeartbeat)
-    heartbeat_thread.start()    
+    heartbeat_thread.daemon = True  # heartbeat_thread as a daemon for it to terminate when the main program ends
+    heartbeat_thread.start()
     server.wait_for_termination()
 
 if __name__ == '__main__':

@@ -3,6 +3,7 @@ import grpc
 import os
 import sys
 import time
+import threading
 
 current_dir = os.path.dirname(os.path.abspath(__file__))
 parent_dir = os.path.dirname(current_dir)
@@ -23,7 +24,7 @@ index_DB = {
 dataNode_addresses = {}
 
 last_assigned = 0
-heartbeat_timeout = 999999999
+heartbeat_timeout = 45
 
 class ClientService(Service_pb2_grpc.ClientServiceServicer):
     
@@ -96,30 +97,28 @@ class DataNodeService(Service_pb2_grpc.DataNodeServiceServicer):
         data_node_id = request.id
         self.data_nodes[data_node_id] = time.time()  # Update the last heartbeat time
         print(f"Heartbeat received from {data_node_id}")
-        print(f"Conected dataNodes: {dataNode_addresses}")
         return Service_pb2.Status(success=True, message=f"Heartbeat from {data_node_id} successfully recieved")
     
-    def CheckLiveDataNodes(self, request, context):
-        current_time = time.time()
-        inactive_nodes = []
+    def CheckLiveDataNodes(self):
+        global last_heartbeat
+        while True:
+            current_time = time.time()
+            inactive_nodes = []
 
-        # Check each DataNode
-        for data_node_id, last_heartbeat in self.data_nodes.items():
-            print(f"el dataNode: {data_node_id} tiene el time: {current_time - last_heartbeat}")
-            # If the DataNode hasn't sent a heartbeat for a long time
-            if current_time - last_heartbeat > self.heartbeat_timeout:
-                # Add it to the list of inactive nodes
-                inactive_nodes.append(data_node_id)
+            # Check each DataNode
+            for data_node_id, last_heartbeat in self.data_nodes.items():
+                # If the DataNode hasn't sent a heartbeat for a long time
+                if current_time - last_heartbeat > heartbeat_timeout:
+                    # Add it to the list of inactive nodes
+                    inactive_nodes.append(data_node_id)
 
-        # Remove the inactive nodes from the dictionary
-        for data_node_id in inactive_nodes:
-            del self.data_nodes[data_node_id]
-            del dataNode_addresses[data_node_id]
-            print(f"DataNode {data_node_id} removed due to inactivity")
+            # Remove the inactive nodes from the dictionary
+            for data_node_id in inactive_nodes:
+                del self.data_nodes[data_node_id]
+                del dataNode_addresses[data_node_id]
+                print(f"DataNode {data_node_id} removed due to inactivity")
 
-        return Service_pb2.Status(success=True, message=f"CheckLiveDataNodes operation completed successfully")
-
-
+            time.sleep(15)
 
 
 class NameNodeService(Service_pb2_grpc.NameNodeServiceServicer):
@@ -139,7 +138,7 @@ class NameNodeService(Service_pb2_grpc.NameNodeServiceServicer):
     def datanode_heartbeat(datanode_id):
         pass
 
-    # cuando un DataNode se cae y toca reasignar todos los bloques que este tenía. 
+    # cuando un DataNode se cae y toca reasignar todos los bloques que este tenía
     def relocate_blocks (datanode_id):
         pass
 
@@ -153,6 +152,10 @@ def serve():
     Service_pb2_grpc.add_DataNodeServiceServicer_to_server(service_dataNode, server)
     server.add_insecure_port('[::]:50051')
     server.start()
+    # Start the SendHeartbeat method in a separate thread
+    check_live_datanodes_thread = threading.Thread(target=service_dataNode.CheckLiveDataNodes)
+    check_live_datanodes_thread.daemon = True  # check_live_datanodes_thread as a daemon for it to terminate when the main program ends
+    check_live_datanodes_thread.start()
     server.wait_for_termination()
 
 if __name__ == '__main__':
