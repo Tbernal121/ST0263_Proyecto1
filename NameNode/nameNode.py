@@ -20,15 +20,11 @@ index_DB = {
 }
 
 # live dataNodes
-dataNode_addresses = {
-    "50052": "localhost:50052",
-    "datanode_id2": "localhost:50053",
-    "datanode_id3": "localhost:50054",
-    "datanode_id4": "localhost:50055",
-    "datanode_id5": "localhost:50056",
-}
+dataNode_addresses = {}
 
 last_assigned = 0
+heartbeat_timeout = 999999999
+
 class ClientService(Service_pb2_grpc.ClientServiceServicer):
     
     
@@ -100,7 +96,30 @@ class DataNodeService(Service_pb2_grpc.DataNodeServiceServicer):
         data_node_id = request.id
         self.data_nodes[data_node_id] = time.time()  # Update the last heartbeat time
         print(f"Heartbeat received from {data_node_id}")
+        print(f"Conected dataNodes: {dataNode_addresses}")
         return Service_pb2.Status(success=True, message=f"Heartbeat from {data_node_id} successfully recieved")
+    
+    def CheckLiveDataNodes(self, request, context):
+        current_time = time.time()
+        inactive_nodes = []
+
+        # Check each DataNode
+        for data_node_id, last_heartbeat in self.data_nodes.items():
+            print(f"el dataNode: {data_node_id} tiene el time: {current_time - last_heartbeat}")
+            # If the DataNode hasn't sent a heartbeat for a long time
+            if current_time - last_heartbeat > self.heartbeat_timeout:
+                # Add it to the list of inactive nodes
+                inactive_nodes.append(data_node_id)
+
+        # Remove the inactive nodes from the dictionary
+        for data_node_id in inactive_nodes:
+            del self.data_nodes[data_node_id]
+            del dataNode_addresses[data_node_id]
+            print(f"DataNode {data_node_id} removed due to inactivity")
+
+        return Service_pb2.Status(success=True, message=f"CheckLiveDataNodes operation completed successfully")
+
+
 
 
 class NameNodeService(Service_pb2_grpc.NameNodeServiceServicer):
