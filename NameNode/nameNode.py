@@ -30,29 +30,22 @@ last_assigned = 0
     
 class DataNodeService(Service_pb2_grpc.DataNodeServiceServicer):
 
-    def __init__(self):
-        self.data_nodes = {}  # Dictionary to store the status of DataNodes
-
     def InitialContact(self, request, context):
-        print("pasa por aqui #1")
         data_node_id = request.id
-        self.data_nodes[data_node_id] = time.time()  # Add the new DataNode to the dictionary
-        # dataNode_addresses[data_node_id] = time.time() # Add the new DataNode to the dictionary
+        dataNode_addresses[data_node_id] = time.time() # Add the new DataNode to the dictionary
         print(f"Initial contact from {data_node_id}")
-        dataNode_addresses[data_node_id] = f'{os.getenv("HOST_ADDRESS")}:{data_node_id}' 
-        # dataNode_addresses[data_node_id] = time.time()
         
         # check if the dataNode it´s already registered (if yes, it means that the datanode was restarted and lost all its blocks)
         # if yes --> start the DataNode Fail Protocol
 
          # Delete the dataNode's entries from index_DB if it's already registered
         #index_DB = {filename: fileinfo for filename, fileinfo in index_DB.items() if fileinfo["datanode_id"] != data_node_id}
+    
         return Service_pb2.Status(success=True, message=f"Initial contact from {data_node_id} successfully recieved")
     
     def SendHeartbeat(self, request, context):
         data_node_id = request.id
-        self.data_nodes[data_node_id] = time.time()  # Update the last heartbeat time
-        # dataNode_addresses[data_node_id] = time.time() # Update the last heartbeat time
+        dataNode_addresses[data_node_id] = time.time() # Update the last heartbeat time
         print(f"Heartbeat received from {data_node_id}")
         return Service_pb2.Status(success=True, message=f"Heartbeat from {data_node_id} successfully recieved")
     
@@ -63,8 +56,7 @@ class DataNodeService(Service_pb2_grpc.DataNodeServiceServicer):
             inactive_nodes = []
 
             # Check each DataNode
-            for data_node_id, last_heartbeat in self.data_nodes.items():
-            # for data_node_id, last_heartbeat in dataNode_addresses.items():
+            for data_node_id, last_heartbeat in dataNode_addresses.items():
                 # If the DataNode hasn't sent a heartbeat for a long time
                 if current_time - last_heartbeat > int(os.getenv('HEARTBEAT_TIMEOUT')):
                     # Add it to the list of inactive nodes
@@ -72,8 +64,6 @@ class DataNodeService(Service_pb2_grpc.DataNodeServiceServicer):
 
             # Remove the inactive nodes from the dictionary
             for data_node_id in inactive_nodes:
-                del self.data_nodes[data_node_id]
-                # del dataNode_addresses[data_node_id]
                 del dataNode_addresses[data_node_id]
                 print(f"DataNode {data_node_id} removed due to inactivity")
 
