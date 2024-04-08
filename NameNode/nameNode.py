@@ -78,31 +78,42 @@ class NameNodeService(Service_pb2_grpc.NameNodeServiceServicer):
     
     def CreateFile(self, request, context):
         global last_assigned
+        data_node_ids = []
         file_name = request.name
         blocks_id = request.blocks_id
         if file_name in index_DB:
             print(f"File {file_name} already exists")
-            return Service_pb2.DataNodeID(id=None)
+            return Service_pb2.DataNodeID(id_list=[])
         
-        # Get the next DataNode in Round Robin order
+        # Get the next DataNode (or DataNodes) in Round Robin order
         print(f"datanode keys: {dataNode_addresses.keys()}")
-        data_node_id = list(dataNode_addresses.keys())[last_assigned]
-        print(f"DataNode assigned by Round Robin: {data_node_id}")
-        last_assigned = (last_assigned + 1) % len(dataNode_addresses)
 
-        index_DB[file_name] = {"datanode_id": data_node_id, "blocks": blocks_id}
-        # Return the DataNode assignment to the client
-        return Service_pb2.DataNodeID(id=index_DB[file_name]["datanode_id"])
-    
+        '''data_node_id = list(dataNode_addresses.keys())[last_assigned]
+        print(f"DataNode assigned by Round Robin: {data_node_id}")
+        last_assigned = (last_assigned + 1) % len(dataNode_addresses)'''
+        
+        for _ in range(int(os.getenv("REPLICATION_NUMBER"))):             
+            data_node_id = list(dataNode_addresses.keys())[last_assigned]
+            data_node_ids.append(data_node_id)
+            last_assigned = (last_assigned + 1) % len(dataNode_addresses)
+
+        print(f"DataNodes assigned by Round Robin: {data_node_ids}")
+
+        #index_DB[file_name] = {"datanode_id": data_node_id, "blocks": blocks_id}
+        index_DB[file_name] = {"datanode_id": data_node_ids, "blocks": blocks_id}
+        # Return the DataNode assignments to the client
+        return Service_pb2.DataNodeIDS(id_list=index_DB[file_name]["datanode_id"]) 
+        
     def GetBlockLocations(self, request, context):
         file_name = request.name
         if file_name in index_DB:
             file_info = index_DB[file_name]
             block_locations = []
-            for block_id in file_info['blocks']:
-                dataNode_id = file_info['datanode_id']
-                block_location = Service_pb2.BlockLocation(block_id=block_id, dataNode_id=dataNode_id)
-                block_locations.append(block_location)
+            for block_id in file_info['blocks']:                
+                for dataNode_id in file_info['datanode_id']:
+                    block_location = Service_pb2.BlockLocation(block_id=block_id, dataNode_id=dataNode_id)
+                    block_locations.append(block_location)
+
             return Service_pb2.BlockLocations(locations=block_locations)
         else:
             return Service_pb2.Status(success=False, message=f"File {file_name} not found")        

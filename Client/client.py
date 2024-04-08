@@ -37,16 +37,17 @@ def run():
             file_name = input("Enter the name of the file to create: ")
             blocks = partitionManagement.file_partition(f'{os.getenv("DIR_PATH")}{file_name}')
             file_data = Service_pb2.FileInfo(name=file_name, blocks_id=blocks)
-            dataNode_id = nameNode_stub.CreateFile(file_data)
-            channel_dataNode = grpc.insecure_channel(f'{os.getenv("HOST_ADDRESS")}:{dataNode_id.id}')
-            dataNode_stub = Service_pb2_grpc.DataNodeServiceStub(channel_dataNode)
-            # Send each block to the DataNode
-            for i, block in enumerate(blocks):
-                block_file_path = os.path.join(f'{file_name}_dir{block}')
-                with open(block_file_path, 'rb') as block_file:
-                    block_content = block_file.read()
-                block_data = Service_pb2.BlockData(id=block, data=block_content)
-                response = dataNode_stub.StoreBlock(block_data)
+            dataNode_ids = nameNode_stub.CreateFile(file_data)
+            for dataNode_id in dataNode_ids.id_list:
+                channel_dataNode = grpc.insecure_channel(f'{os.getenv("HOST_ADDRESS")}:{dataNode_id}')
+                dataNode_stub = Service_pb2_grpc.DataNodeServiceStub(channel_dataNode)
+                # Send each block to the DataNode
+                for i, block in enumerate(blocks):
+                    block_file_path = os.path.join(f'{file_name}_dir{block}')
+                    with open(block_file_path, 'rb') as block_file:
+                        block_content = block_file.read()
+                    block_data = Service_pb2.BlockData(id=block, data=block_content)
+                    response = dataNode_stub.StoreBlock(block_data)
             # Delete the block's directory
             shutil.rmtree(f"{file_name}_dir")
         
@@ -60,73 +61,83 @@ def run():
 
                 # Read Logic
                 if action == '1':
-                    blocks = []
+                    block_id_register = []
                     # Create a temporary directory to store the blocks
                     with tempfile.TemporaryDirectory() as temp_dir:
                         i = 0
-                        for block_locations in block_locations_map.locations:
+                        for block_locations in block_locations_map.locations:                            
                             block_id = block_locations.block_id
-                            dataNode_id = block_locations.dataNode_id
-                            channel_dataNode = grpc.insecure_channel(f'{os.getenv("HOST_ADDRESS")}:{dataNode_id}')
-                            dataNode_stub = Service_pb2_grpc.DataNodeServiceStub(channel_dataNode)
-                            block_request = Service_pb2.BlockId(id=block_id)
-                            block = dataNode_stub.SendBlock(block_request)
-                            # Write each block to a file in the temporary directory
-                            with open(os.path.join(temp_dir, str(i).zfill(4)), 'w') as block_file:
-                                block_file.write(block.data)
-                            i+=1
+                            if block_id in block_id_register:
+                                print(f"block_id ya está... {block_id}")
+                                pass
+                            else:
+                                dataNode_id = block_locations.dataNode_id  # Get the first DataNode ID # block_locations.dataNode_id [0]
+                                print(f"block_id: {block_id}")
+                                print(f"block_locations.dataNode_id: {block_locations.dataNode_id}")
+                                channel_dataNode = grpc.insecure_channel(f'{os.getenv("HOST_ADDRESS")}:{dataNode_id}')
+                                dataNode_stub = Service_pb2_grpc.DataNodeServiceStub(channel_dataNode)
+                                block_request = Service_pb2.BlockId(id=block_id)
+                                block = dataNode_stub.SendBlock(block_request)
+                                # Write each block to a file in the temporary directory
+                                with open(os.path.join(temp_dir, str(i).zfill(4)), 'w') as block_file:
+                                    block_file.write(block.data)
+                                i+=1
+                                block_id_register.append(block_id)
+
+                            
                         
                         file_data = partitionManagement.join_partitioned_files(temp_dir, f'reconstructed_{file_name}{os.getenv("DEFAULT_FILE_EXTENSION")}')
                  
                 # Write Logic
                 elif action == '2':
                     new_text = input("Enter the text to add: ")
-                    new_text_bytes = new_text.encode('utf-8')
                     if not block_locations_map.locations:
-                         print("File not found")
-                         continue  # back to the menu
-                    
-                    last_dataNode_id = block_locations_map.locations[-1].dataNode_id
-                    channel_dataNode = grpc.insecure_channel(f'{os.getenv("HOST_ADDRESS")}:{last_dataNode_id}')
-                    dataNode_stub = Service_pb2_grpc.DataNodeServiceStub(channel_dataNode)
+                        print("File not found")
+                        continue  # back to the menu
 
                     # Get the last block
                     last_block_id = block_locations_map.locations[-1].block_id
-                    last_block_data = dataNode_stub.SendBlock(Service_pb2.BlockId(id=last_block_id))
-                    
-                    # Verificar si el último bloque tiene espacio para más datos
-                    if len(last_block_data.data) + len(new_text.encode('utf-8')) <= int(os.getenv("BLOCK_SIZE")): # max block size 
-                        # Si hay espacio, añadir el nuevo texto al último bloque
-                        updated_block_data = Service_pb2.BlockData(id=last_block_id, data=last_block_data.data + new_text)
-                        response = dataNode_stub.StoreBlock(updated_block_data)
-                        if not response.success:
-                            print("Failed to update the last block")
-                            continue
-                    
-                    else:
-                        # Genera un nuevo ID de bloque basado en un esquema de nomenclatura o un identificador único
-                        new_block_id = f"new_block_{int(time.time())}"  # Ejemplo de generación de un nuevo block_id
-                        #new_block_id = f'/part-{block_num:04d}'  # Generación de un nuevo block_id
-                        
-                        # Add the new block to block_locations_map
+
+                    # Check if the last block has space for more data
+                    last_block_data = None
+                    for location in block_locations_map.locations:
+                        if location.block_id == last_block_id:
+                            channel_dataNode = grpc.insecure_channel(f'{os.getenv("HOST_ADDRESS")}:{location.dataNode_id}')
+                            dataNode_stub = Service_pb2_grpc.DataNodeServiceStub(channel_dataNode)
+                            last_block_data = dataNode_stub.SendBlock(Service_pb2.BlockId(id=last_block_id))
+
+                            if len(last_block_data.data) + len(new_text.encode('utf-8')) <= int(os.getenv("BLOCK_SIZE")): # max block size 
+                                # If there is space, add the new text to the last block
+                                updated_block_data = Service_pb2.BlockData(id=last_block_id, data=last_block_data.data + new_text)
+                                response = dataNode_stub.StoreBlock(updated_block_data)
+                                if not response.success:
+                                    print("Failed to update the last block")
+                                    continue
+
+                    if last_block_data is None or len(last_block_data.data) + len(new_text.encode('utf-8')) > int(os.getenv("BLOCK_SIZE")): # max block size**
+                        # Generate a new block ID based on a naming scheme or a unique identifier
+                        new_block_id = f"new_block_{int(time.time())}"  # Example of generating a new block_id
+
+                        # Add the new block to the last DataNode
                         block_location = Service_pb2.BlockLocation(block_id=new_block_id, dataNode_id=last_dataNode_id)
                         block_locations_map.locations.append(block_location)
 
-                        # Almacenar el nuevo bloque en el DataNode seleccionado
+                        # Store the new block in the selected DataNode
                         block_data = Service_pb2.BlockData(id=new_block_id, data=new_text)
                         response = dataNode_stub.StoreBlock(block_data)
-                        
+
                     if not response.success:
                         print("Failed to store the new block")
                         continue
-                    # Actualizar la lista de bloques del archivo en el NameNode
+                    # Update the file's block list in the NameNode
                     blocks_id = [location.block_id for location in block_locations_map.locations]
-                    
+
                     update_response = nameNode_stub.UpdateFileBlocks(Service_pb2.FileInfo(name=file_name, blocks_id=blocks_id))
                     if not update_response.success:
                         print("Failed to update the file's block list in the NameNode")
                     else:
                         print("Text added successfully to the file")
+
                     
                 elif action == '3':
                     break

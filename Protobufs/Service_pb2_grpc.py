@@ -22,7 +22,7 @@ class NameNodeServiceStub(object):
         self.CreateFile = channel.unary_unary(
                 '/NameNodeService/CreateFile',
                 request_serializer=Service__pb2.FileInfo.SerializeToString,
-                response_deserializer=Service__pb2.DataNodeID.FromString,
+                response_deserializer=Service__pb2.DataNodeIDS.FromString,
                 )
         self.GetBlockLocations = channel.unary_unary(
                 '/NameNodeService/GetBlockLocations',
@@ -85,7 +85,7 @@ def add_NameNodeServiceServicer_to_server(servicer, server):
             'CreateFile': grpc.unary_unary_rpc_method_handler(
                     servicer.CreateFile,
                     request_deserializer=Service__pb2.FileInfo.FromString,
-                    response_serializer=Service__pb2.DataNodeID.SerializeToString,
+                    response_serializer=Service__pb2.DataNodeIDS.SerializeToString,
             ),
             'GetBlockLocations': grpc.unary_unary_rpc_method_handler(
                     servicer.GetBlockLocations,
@@ -142,7 +142,7 @@ class NameNodeService(object):
             metadata=None):
         return grpc.experimental.unary_unary(request, target, '/NameNodeService/CreateFile',
             Service__pb2.FileInfo.SerializeToString,
-            Service__pb2.DataNodeID.FromString,
+            Service__pb2.DataNodeIDS.FromString,
             options, channel_credentials,
             insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
 

@@ -2,7 +2,7 @@ syntax = "proto3";
   
   service NameNodeService {
     rpc ListFiles(Empty) returns (FileList) {}
-    rpc CreateFile(FileInfo) returns (DataNodeID) {}
+    rpc CreateFile(FileInfo) returns (DataNodeIDS) {}
     rpc GetBlockLocations(FileName) returns (BlockLocations) {}
     rpc UpdateFileBlocks(FileInfo) returns (Status) {}
     rpc RelocateBlocks(BlockRelocation) returns (Status) {} // redifine the parameter and the return
@@ -83,6 +83,10 @@ message BlockId {
 
 message DataNodeID {
   string id = 1;
+}
+
+message DataNodeIDS {
+  repeated string id_list = 1;
 }
 
 message BlockData {
