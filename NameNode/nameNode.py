@@ -4,6 +4,7 @@ import os
 import sys
 import time
 import threading
+from dotenv import load_dotenv
 
 current_dir = os.path.dirname(os.path.abspath(__file__))
 parent_dir = os.path.dirname(current_dir)
@@ -11,6 +12,8 @@ sys.path.append(parent_dir)
 
 from Protobufs import Service_pb2
 from Protobufs import Service_pb2_grpc
+
+load_dotenv() # Load enviroment variables
 
 index_DB = {
     "file1": {"datanode_id": "50052", "blocks": ["block_id1", "block_id2", "block_id3", "block_id4", "block_id5", "block_id6", "block_id7", "block_id8", "block_id9", "block_id10", "block_id11", "block_id12"]},
@@ -24,11 +27,61 @@ index_DB = {
 dataNode_addresses = {}
 
 last_assigned = 0
-heartbeat_timeout = 45
+    
+class DataNodeService(Service_pb2_grpc.DataNodeServiceServicer):
 
-class ClientService(Service_pb2_grpc.ClientServiceServicer):
+    def __init__(self):
+        self.data_nodes = {}  # Dictionary to store the status of DataNodes
+
+    def InitialContact(self, request, context):
+        print("pasa por aqui #1")
+        data_node_id = request.id
+        self.data_nodes[data_node_id] = time.time()  # Add the new DataNode to the dictionary
+        # dataNode_addresses[data_node_id] = time.time() # Add the new DataNode to the dictionary
+        print(f"Initial contact from {data_node_id}")
+        dataNode_addresses[data_node_id] = f'{os.getenv("HOST_ADDRESS")}:{data_node_id}' 
+        # dataNode_addresses[data_node_id] = time.time()
+        
+        # check if the dataNode it´s already registered (if yes, it means that the datanode was restarted and lost all its blocks)
+        # if yes --> start the DataNode Fail Protocol
+
+         # Delete the dataNode's entries from index_DB if it's already registered
+        #index_DB = {filename: fileinfo for filename, fileinfo in index_DB.items() if fileinfo["datanode_id"] != data_node_id}
+        return Service_pb2.Status(success=True, message=f"Initial contact from {data_node_id} successfully recieved")
     
+    def SendHeartbeat(self, request, context):
+        data_node_id = request.id
+        self.data_nodes[data_node_id] = time.time()  # Update the last heartbeat time
+        # dataNode_addresses[data_node_id] = time.time() # Update the last heartbeat time
+        print(f"Heartbeat received from {data_node_id}")
+        return Service_pb2.Status(success=True, message=f"Heartbeat from {data_node_id} successfully recieved")
     
+    def CheckLiveDataNodes(self):
+        global last_heartbeat
+        while True:
+            current_time = time.time()
+            inactive_nodes = []
+
+            # Check each DataNode
+            for data_node_id, last_heartbeat in self.data_nodes.items():
+            # for data_node_id, last_heartbeat in dataNode_addresses.items():
+                # If the DataNode hasn't sent a heartbeat for a long time
+                if current_time - last_heartbeat > int(os.getenv('HEARTBEAT_TIMEOUT')):
+                    # Add it to the list of inactive nodes
+                    inactive_nodes.append(data_node_id)
+
+            # Remove the inactive nodes from the dictionary
+            for data_node_id in inactive_nodes:
+                del self.data_nodes[data_node_id]
+                # del dataNode_addresses[data_node_id]
+                del dataNode_addresses[data_node_id]
+                print(f"DataNode {data_node_id} removed due to inactivity")
+
+            time.sleep(int(os.getenv("CHECK_LIVE_DATANODES_TIMEOUT")))
+
+
+class NameNodeService(Service_pb2_grpc.NameNodeServiceServicer):
+
     def ListFiles(self, request, context):
         file_names = list(index_DB.keys())
         return Service_pb2.FileList(files=file_names)
@@ -42,8 +95,9 @@ class ClientService(Service_pb2_grpc.ClientServiceServicer):
             return Service_pb2.DataNodeID(id=None)
         
         # Get the next DataNode in Round Robin order
-        data_node_id = list(dataNode_addresses.keys())[last_assigned] # "50052"
-        print(f"dataNode asignado por el Round Robin: {data_node_id}")
+        print(f"datanode keys: {dataNode_addresses.keys()}")
+        data_node_id = list(dataNode_addresses.keys())[last_assigned]
+        print(f"DataNode assigned by Round Robin: {data_node_id}")
         last_assigned = (last_assigned + 1) % len(dataNode_addresses)
 
         index_DB[file_name] = {"datanode_id": data_node_id, "blocks": blocks_id}
@@ -61,14 +115,7 @@ class ClientService(Service_pb2_grpc.ClientServiceServicer):
                 block_locations.append(block_location)
             return Service_pb2.BlockLocations(locations=block_locations)
         else:
-            return Service_pb2.Status(success=False, message=f"File {file_name} not found")
-        
-    # Takes a DataNode address and returns a stub to communicate with that DataNode
-    def GetDataNodeStub(self, request, context):
-        dataNode_id = request.id
-        dataNode_address = dataNode_addresses[dataNode_id]
-        channel = dataNode_address
-        return Service_pb2.Channel(channel = channel)
+            return Service_pb2.Status(success=False, message=f"File {file_name} not found")        
     
     def UpdateFileBlocks(self, request, context):
         file_name = request.name
@@ -80,77 +127,19 @@ class ClientService(Service_pb2_grpc.ClientServiceServicer):
             return Service_pb2.Status(success=True, message="File blocks updated successfully.")
         else:
             return Service_pb2.Status(success=False, message="File does not exist.")
-
-class DataNodeService(Service_pb2_grpc.DataNodeServiceServicer):
-
-    def __init__(self):
-        self.data_nodes = {}  # Dictionary to store the status of DataNodes
-
-    def InitialContact(self, request, context):
-        data_node_id = request.id
-        self.data_nodes[data_node_id] = time.time()  # Add the new DataNode to the dictionary
-        print(f"Initial contact from {data_node_id}")
-        dataNode_addresses[data_node_id] = f"localhost:{data_node_id}"
-        return Service_pb2.Status(success=True, message=f"Initial contact from {data_node_id} successfully recieved")
-    
-    def SendHeartbeat(self, request, context):
-        data_node_id = request.id
-        self.data_nodes[data_node_id] = time.time()  # Update the last heartbeat time
-        print(f"Heartbeat received from {data_node_id}")
-        return Service_pb2.Status(success=True, message=f"Heartbeat from {data_node_id} successfully recieved")
-    
-    def CheckLiveDataNodes(self):
-        global last_heartbeat
-        while True:
-            current_time = time.time()
-            inactive_nodes = []
-
-            # Check each DataNode
-            for data_node_id, last_heartbeat in self.data_nodes.items():
-                # If the DataNode hasn't sent a heartbeat for a long time
-                if current_time - last_heartbeat > heartbeat_timeout:
-                    # Add it to the list of inactive nodes
-                    inactive_nodes.append(data_node_id)
-
-            # Remove the inactive nodes from the dictionary
-            for data_node_id in inactive_nodes:
-                del self.data_nodes[data_node_id]
-                del dataNode_addresses[data_node_id]
-                print(f"DataNode {data_node_id} removed due to inactivity")
-
-            time.sleep(15)
-
-
-class NameNodeService(Service_pb2_grpc.NameNodeServiceServicer):
-        
-    def allocate_blocks(file):
+   
+    # When the node crashes and it is necessary to reallocate all the blocks that it had
+    def RegisterDataNode (self, request, context):
         pass
-
-    def append(file, data):
-        pass
-
-    def get_block_locations(file):
-        pass
-
-    def register_datanode(datanode_id):
-        pass
-
-    def datanode_heartbeat(datanode_id):
-        pass
-
-    # cuando un DataNode se cae y toca reasignar todos los bloques que este tenía
-    def relocate_blocks (datanode_id):
-        pass
-
 
 
 def serve():
     service_dataNode = DataNodeService()
-    service_client = ClientService()
-    server = grpc.server(futures.ThreadPoolExecutor(max_workers=10))
-    Service_pb2_grpc.add_ClientServiceServicer_to_server(service_client, server)
+    service_nameNode = NameNodeService()
+    server = grpc.server(futures.ThreadPoolExecutor(max_workers = int(os.getenv("MAX_WORKERS")))) 
     Service_pb2_grpc.add_DataNodeServiceServicer_to_server(service_dataNode, server)
-    server.add_insecure_port('[::]:50051')
+    Service_pb2_grpc.add_NameNodeServiceServicer_to_server(service_nameNode, server)
+    server.add_insecure_port(f'[::]:{str(os.getenv("NAMENODE_PORT"))}')
     server.start()
     # Start the SendHeartbeat method in a separate thread
     check_live_datanodes_thread = threading.Thread(target=service_dataNode.CheckLiveDataNodes)

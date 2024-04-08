@@ -1,34 +1,19 @@
 syntax = "proto3";
-
-service ClientService {
+  
+  service NameNodeService {
     rpc ListFiles(Empty) returns (FileList) {}
     rpc CreateFile(FileInfo) returns (DataNodeID) {}
     rpc GetBlockLocations(FileName) returns (BlockLocations) {}
-    rpc GetDataNodeStub(DataNodeID) returns (Channel) {}
-    rpc Open(FileName) returns (Status) {}
-    rpc Close(FileName) returns (Status) {}
-    rpc Read(FileName) returns (FileData) {}
-    rpc Write(FileData) returns (Status) {}
-    rpc FilePartition(FileName) returns (PartitionedFile) {}
-    rpc JoinPartitionedFiles(PartitionedFile) returns (FileData) {}
     rpc UpdateFileBlocks(FileInfo) returns (Status) {}
-  }
-  
-  service NameNodeService {
-    rpc AllocateBlocks(FileData) returns (BlockAllocation) {}
-    rpc Append(FileData) returns (Status) {}
-    rpc RegisterDataNode(DataNodeInfo) returns (Status) {}
-    rpc DataNodeHeartbeat(DataNodeStatus) returns (Status) {}
-    rpc RelocateBlocks(BlockRelocation) returns (Status) {}
+    rpc RelocateBlocks(BlockRelocation) returns (Status) {} // redifine the parameter and the return
   }
   
   service DataNodeService {
     rpc SendHeartbeat(DataNodeID) returns (Status) {}
-    rpc InitialContact(DataNodeID) returns (Status) {}
+    rpc InitialContact(DataNodeID) returns (Status) {} //RegisterDataNode possible name
     rpc StoreBlock(BlockData) returns (Status) {}
     rpc DeleteBlock(BlockId) returns (Status) {}
     rpc SendBlock(BlockId) returns (BlockData) {}
-    rpc CleanStart(Empty) returns (Status) {}
     rpc ChangeOfLeader(LeaderInfo) returns (Status) {}
   }
 
@@ -98,10 +83,6 @@ message BlockId {
 
 message DataNodeID {
   string id = 1;
-}
-
-message Channel {
-  string channel = 1;
 }
 
 message BlockData {

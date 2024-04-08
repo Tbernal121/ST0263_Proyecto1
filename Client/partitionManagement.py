@@ -2,7 +2,7 @@ import os
 
 def file_partition(file_name):  
     blocks = [] # List to store the  blocks
-    block_size=1024*1024 #1mb
+    block_size = int(os.getenv("BLOCK_SIZE")) 
     base_file_name = os.path.splitext(os.path.basename(file_name))[0] + os.path.splitext(os.path.basename(file_name))[1]
     destination_directory = f"{base_file_name}_dir"
     
