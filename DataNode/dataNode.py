@@ -21,20 +21,7 @@ nameNode_stub = Service_pb2_grpc.DataNodeServiceStub(channel_nameNode)
 class DataNodeService(Service_pb2_grpc.DataNodeServiceServicer):
 
     def __init__(self):
-        self.blocks = {
-            'block_id1': '1 ',
-            'block_id2': '2 ',
-            'block_id3': '3 ',
-            'block_id4': '4 ',
-            'block_id5': '5 ',
-            'block_id6': '6 ',
-            'block_id7': '7 ',
-            'block_id8': '8 ',
-            'block_id9': '9 ',
-            'block_id10': '10 ',
-            'block_id11': '11 ',
-            'block_id12': '12 ',
-        }
+        self.blocks = {}
 
     def InitialContact(self):
         initial_contact = Service_pb2.DataNodeID(id=os.getenv("PORT"))

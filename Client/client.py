@@ -68,12 +68,9 @@ def run():
                         for block_locations in block_locations_map.locations:                            
                             block_id = block_locations.block_id
                             if block_id in block_id_register:
-                                print(f"block_id ya está... {block_id}")
                                 pass
                             else:
                                 dataNode_id = block_locations.dataNode_id  # Get the first DataNode ID # block_locations.dataNode_id [0]
-                                print(f"block_id: {block_id}")
-                                print(f"block_locations.dataNode_id: {block_locations.dataNode_id}")
                                 channel_dataNode = grpc.insecure_channel(f'{os.getenv("HOST_ADDRESS")}:{dataNode_id}')
                                 dataNode_stub = Service_pb2_grpc.DataNodeServiceStub(channel_dataNode)
                                 block_request = Service_pb2.BlockId(id=block_id)
@@ -119,7 +116,7 @@ def run():
                         new_block_id = f"new_block_{int(time.time())}"  # Example of generating a new block_id
 
                         # Add the new block to the last DataNode
-                        block_location = Service_pb2.BlockLocation(block_id=new_block_id, dataNode_id=last_dataNode_id)
+                        block_location = Service_pb2.BlockLocation(block_id=new_block_id, dataNode_id=location.dataNode_id)
                         block_locations_map.locations.append(block_location)
 
                         # Store the new block in the selected DataNode

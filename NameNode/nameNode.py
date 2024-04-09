@@ -15,13 +15,9 @@ from Protobufs import Service_pb2_grpc
 
 load_dotenv() # Load enviroment variables
 
-index_DB = {
-    "file1": {"datanode_id": "50052", "blocks": ["block_id1", "block_id2", "block_id3", "block_id4", "block_id5", "block_id6", "block_id7", "block_id8", "block_id9", "block_id10", "block_id11", "block_id12"]},
-    "file2": {"datanode_id": "datanode_id2", "blocks": ["block_id4", "block_id5", "block_id6"]},
-    "file3": {"datanode_id": "datanode_id3", "blocks": ["block_id7", "block_id8", "block_id9"]},
-    "file4": {"datanode_id": "datanode_id4", "blocks": ["block_id10", "block_id11", "block_id12"]},
-    "file5": {"datanode_id": "datanode_id5", "blocks": ["block_id13", "block_id14", "block_id15"]},
-}
+index_DB = {}
+    # "file1": {"datanode_id": "50052", "blocks": ["block_id1", "block_id2", "block_id3", "block_id4", "block_id5", "block_id6", "block_id7", "block_id8", "block_id9", "block_id10", "block_id11", "block_id12"]},
+
 
 # live dataNodes
 dataNode_addresses = {}
@@ -87,10 +83,6 @@ class NameNodeService(Service_pb2_grpc.NameNodeServiceServicer):
         
         # Get the next DataNode (or DataNodes) in Round Robin order
         print(f"datanode keys: {dataNode_addresses.keys()}")
-
-        '''data_node_id = list(dataNode_addresses.keys())[last_assigned]
-        print(f"DataNode assigned by Round Robin: {data_node_id}")
-        last_assigned = (last_assigned + 1) % len(dataNode_addresses)'''
         
         for _ in range(int(os.getenv("REPLICATION_NUMBER"))):             
             data_node_id = list(dataNode_addresses.keys())[last_assigned]
@@ -98,8 +90,6 @@ class NameNodeService(Service_pb2_grpc.NameNodeServiceServicer):
             last_assigned = (last_assigned + 1) % len(dataNode_addresses)
 
         print(f"DataNodes assigned by Round Robin: {data_node_ids}")
-
-        #index_DB[file_name] = {"datanode_id": data_node_id, "blocks": blocks_id}
         index_DB[file_name] = {"datanode_id": data_node_ids, "blocks": blocks_id}
         # Return the DataNode assignments to the client
         return Service_pb2.DataNodeIDS(id_list=index_DB[file_name]["datanode_id"]) 
