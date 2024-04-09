@@ -1,6 +1,7 @@
 syntax = "proto3";
   
   service NameNodeService {
+    rpc LeaderHeartbeat(NameNodeID) returns (Status) {}
     rpc ListFiles(Empty) returns (FileList) {}
     rpc CreateFile(FileInfo) returns (DataNodeIDS) {}
     rpc GetBlockLocations(FileName) returns (BlockLocations) {}
@@ -82,6 +83,10 @@ message BlockId {
 }
 
 message DataNodeID {
+  string id = 1;
+}
+
+message NameNodeID {
   string id = 1;
 }
 

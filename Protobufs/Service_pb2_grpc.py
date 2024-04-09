@@ -14,6 +14,11 @@ class NameNodeServiceStub(object):
         Args:
             channel: A grpc.Channel.
         """
+        self.LeaderHeartbeat = channel.unary_unary(
+                '/NameNodeService/LeaderHeartbeat',
+                request_serializer=Service__pb2.NameNodeID.SerializeToString,
+                response_deserializer=Service__pb2.Status.FromString,
+                )
         self.ListFiles = channel.unary_unary(
                 '/NameNodeService/ListFiles',
                 request_serializer=Service__pb2.Empty.SerializeToString,
@@ -43,6 +48,12 @@ class NameNodeServiceStub(object):
 
 class NameNodeServiceServicer(object):
     """Missing associated documentation comment in .proto file."""
+
+    def LeaderHeartbeat(self, request, context):
+        """Missing associated documentation comment in .proto file."""
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
 
     def ListFiles(self, request, context):
         """Missing associated documentation comment in .proto file."""
@@ -77,6 +88,11 @@ class NameNodeServiceServicer(object):
 
 def add_NameNodeServiceServicer_to_server(servicer, server):
     rpc_method_handlers = {
+            'LeaderHeartbeat': grpc.unary_unary_rpc_method_handler(
+                    servicer.LeaderHeartbeat,
+                    request_deserializer=Service__pb2.NameNodeID.FromString,
+                    response_serializer=Service__pb2.Status.SerializeToString,
+            ),
             'ListFiles': grpc.unary_unary_rpc_method_handler(
                     servicer.ListFiles,
                     request_deserializer=Service__pb2.Empty.FromString,
@@ -111,6 +127,23 @@ def add_NameNodeServiceServicer_to_server(servicer, server):
  # This class is part of an EXPERIMENTAL API.
 class NameNodeService(object):
     """Missing associated documentation comment in .proto file."""
+
+    @staticmethod
+    def LeaderHeartbeat(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(request, target, '/NameNodeService/LeaderHeartbeat',
+            Service__pb2.NameNodeID.SerializeToString,
+            Service__pb2.Status.FromString,
+            options, channel_credentials,
+            insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
 
     @staticmethod
     def ListFiles(request,
