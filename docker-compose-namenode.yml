@@ -1,0 +1,16 @@
+version: "3.4"
+services:
+  datanode:
+    build:
+      context: .
+      dockerfile: ./nameNode/Dockerfile
+    command: python nameNode.py
+    env_file:
+      - nameNode/.env
+    expose:
+      - 5000
+    ports:
+      - 5000:5000
+    volumes:
+      - ./nameNode:/app
+      - ./protos:/app/protos
