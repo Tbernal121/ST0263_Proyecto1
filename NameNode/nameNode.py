@@ -4,6 +4,8 @@ import os
 import sys
 import time
 import threading
+import json
+
 from dotenv import load_dotenv
 
 current_dir = os.path.dirname(os.path.abspath(__file__))
@@ -15,7 +17,9 @@ from Protobufs import Service_pb2_grpc
 
 load_dotenv() # Load enviroment variables
 
-index_DB = {}
+index_DB = {"file1": {"datanode_id": "50052", "blocks": ["block_id1", "block_id2", "block_id3", "block_id4", "block_id5", "block_id6", "block_id7", "block_id8", "block_id9", "block_id10", "block_id11", "block_id12"]},
+            "file2": {"datanode_id": "50052", "blocks": ["block_id11", "block_id12", "block_id13", "block_id14", "block_id15", "block_id16", "block_id17", "block_id18", "block_id19", "block_id20", "block_id12", "block_id22"]},
+            }
     # "file1": {"datanode_id": "50052", "blocks": ["block_id1", "block_id2", "block_id3", "block_id4", "block_id5", "block_id6", "block_id7", "block_id8", "block_id9", "block_id10", "block_id11", "block_id12"]},
 
 # live NameNodes (first one always is the Leader)
@@ -113,28 +117,69 @@ class DataNodeService(Service_pb2_grpc.DataNodeServiceServicer):
 class NameNodeService(Service_pb2_grpc.NameNodeServiceServicer):
 
     def leader_heartbeat(self, nameNode_leader):
+        global nameNodes_connected
+        global last_assigned
         global nameNode_first_heartbeat
+        global index_DB
+        global dataNode_addresses
         while True:
             if nameNode_first_heartbeat == 0 and nameNode_leader != str(os.getenv("NAMENODE_PORT")):
                 nameNodes_connected.insert(0 , nameNode_leader)
                 nameNode_first_heartbeat = 1
             print(f"nameNodes_connected: {nameNodes_connected}")
             nameNode_leader = nameNodes_connected[0]
+            
             if nameNode_leader != str(os.getenv("NAMENODE_PORT")):
                 channel_nameNode_leader = grpc.insecure_channel(f'{os.getenv("HOST_ADDRESS")}:{nameNode_leader}') # Address of the nameNode Leader
                 nameNode_leader_stub = Service_pb2_grpc.NameNodeServiceStub(channel_nameNode_leader)
-                heartbeat = Service_pb2.NameNodeID(id=str(os.getenv("NAMENODE_PORT")))
-                response = nameNode_leader_stub.LeaderHeartbeat(heartbeat)
-                print("Heartbeat sent to nameNode Leader : {nameNode_leader}")
+                heartbeat = Service_pb2.NameNodeID(id=str(os.getenv("NAMENODE_PORT")))                
+                try:
+                    nameNodes_info= nameNode_leader_stub.LeaderHeartbeat(heartbeat)
+                    nameNodes_connected = nameNodes_info.id_list
+                    last_assigned = nameNodes_info.last_assigned
+                    nameNode_first_heartbeat = nameNodes_info.nameNode_first_heartbeat
+                    print(f"Heartbeat sent to nameNode Leader : {nameNode_leader}")
+                    dictionary = json.loads(nameNodes_info.dictionary)
+                    index_DB = dictionary.copy()
+                
+                except Exception as e:
+                    # change of Leader because the current one just failed
+                    del nameNodes_connected[0]
+                    print(f"new leader: {nameNodes_connected[0]}")
+                    print(f"Uploaded nameNodes_connected: {nameNodes_connected}")
+
+            else:
+                for nameNode in nameNodes_connected[:]:  # Iterate over a copy of the list
+                    channel = grpc.insecure_channel(f'{os.getenv("HOST_ADDRESS")}:{nameNode}')
+                    stub = Service_pb2_grpc.NameNodeServiceStub(channel)
+                    heartbeat = Service_pb2.NameNodeID(id=str(os.getenv("NAMENODE_PORT")))
+                    try:
+                        stub.LeaderHeartbeat(heartbeat)  # Send a heartbeat
+                    except Exception as e:
+                        # If the heartbeat fails, remove the node from the list
+                        nameNodes_connected.remove(nameNode)
+                        print(f"Node {nameNode} is not alive. Removed from the list.")
             
             time.sleep(int(os.getenv("HEARTBEAT_INTERVAL")))  # Wait for n seconds before sending the next heartbeat
+            
         
-    def LeaderHeartbeat(self, request, context):
+    def LeaderHeartbeat(self, request, context): # should return the nameNodes_connected
+        global nameNodes_connected
+        global last_assigned
+        global nameNode_first_heartbeat
+        global index_DB
+        global dataNode_addresses
         name_node_id = request.id
-        dataNode_addresses[name_node_id] = time.time() # Update the last heartbeat time
-        print(f"NameNode heartbeat received from: {name_node_id}")
-        return Service_pb2.Status(success=True, message=f"Heartbeat from {name_node_id} successfully recieved")
-
+        leader_info = Service_pb2.LeaderInfo()
+        if name_node_id not in nameNodes_connected:
+            nameNodes_connected.append(name_node_id)
+        for nameNode in nameNodes_connected:
+            leader_info.id_list.append(nameNode)
+        leader_info.last_assigned = last_assigned
+        leader_info.nameNode_first_heartbeat = nameNode_first_heartbeat
+        leader_info.dictionary = json.dumps(index_DB)        
+        return leader_info
+    
     def ListFiles(self, request, context):
         file_names = list(index_DB.keys())
         print(f"index_DB: {index_DB}")

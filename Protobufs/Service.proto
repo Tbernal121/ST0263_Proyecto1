@@ -1,7 +1,7 @@
 syntax = "proto3";
   
   service NameNodeService {
-    rpc LeaderHeartbeat(NameNodeID) returns (Status) {}
+    rpc LeaderHeartbeat(NameNodeID) returns (LeaderInfo) {}
     rpc ListFiles(Empty) returns (FileList) {}
     rpc CreateFile(FileInfo) returns (DataNodeIDS) {}
     rpc GetBlockLocations(FileName) returns (BlockLocations) {}
@@ -15,7 +15,6 @@ syntax = "proto3";
     rpc StoreBlock(BlockData) returns (Status) {}
     rpc DeleteBlock(BlockId) returns (Status) {}
     rpc SendBlock(BlockId) returns (BlockData) {}
-    rpc ChangeOfLeader(LeaderInfo) returns (Status) {}
   }
 
 message Empty {}
@@ -99,7 +98,27 @@ message BlockData {
   string data = 2;
 }
 
+message NameNodeIDS {
+  repeated string id_list = 1;
+}
+
+message FileBlock {
+  repeated string datanode_id = 1;
+  repeated string blocks = 2;
+}
+
+message DictionaryEntry {
+  string key = 1;
+  FileBlock value = 2;
+}
+
+message Dictionary {
+  repeated DictionaryEntry entries = 1;
+}
+
 message LeaderInfo {
-  string id = 1;
-  string address = 2;
+  repeated string id_list = 1;
+  int32 last_assigned = 2;
+  int32 nameNode_first_heartbeat = 3;
+  string dictionary = 4; // Dictionary dictionary = 4;
 }

@@ -17,7 +17,7 @@ class NameNodeServiceStub(object):
         self.LeaderHeartbeat = channel.unary_unary(
                 '/NameNodeService/LeaderHeartbeat',
                 request_serializer=Service__pb2.NameNodeID.SerializeToString,
-                response_deserializer=Service__pb2.Status.FromString,
+                response_deserializer=Service__pb2.LeaderInfo.FromString,
                 )
         self.ListFiles = channel.unary_unary(
                 '/NameNodeService/ListFiles',
@@ -91,7 +91,7 @@ def add_NameNodeServiceServicer_to_server(servicer, server):
             'LeaderHeartbeat': grpc.unary_unary_rpc_method_handler(
                     servicer.LeaderHeartbeat,
                     request_deserializer=Service__pb2.NameNodeID.FromString,
-                    response_serializer=Service__pb2.Status.SerializeToString,
+                    response_serializer=Service__pb2.LeaderInfo.SerializeToString,
             ),
             'ListFiles': grpc.unary_unary_rpc_method_handler(
                     servicer.ListFiles,
@@ -141,7 +141,7 @@ class NameNodeService(object):
             metadata=None):
         return grpc.experimental.unary_unary(request, target, '/NameNodeService/LeaderHeartbeat',
             Service__pb2.NameNodeID.SerializeToString,
-            Service__pb2.Status.FromString,
+            Service__pb2.LeaderInfo.FromString,
             options, channel_credentials,
             insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
 
@@ -265,11 +265,6 @@ class DataNodeServiceStub(object):
                 request_serializer=Service__pb2.BlockId.SerializeToString,
                 response_deserializer=Service__pb2.BlockData.FromString,
                 )
-        self.ChangeOfLeader = channel.unary_unary(
-                '/DataNodeService/ChangeOfLeader',
-                request_serializer=Service__pb2.LeaderInfo.SerializeToString,
-                response_deserializer=Service__pb2.Status.FromString,
-                )
 
 
 class DataNodeServiceServicer(object):
@@ -305,12 +300,6 @@ class DataNodeServiceServicer(object):
         context.set_details('Method not implemented!')
         raise NotImplementedError('Method not implemented!')
 
-    def ChangeOfLeader(self, request, context):
-        """Missing associated documentation comment in .proto file."""
-        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
-        context.set_details('Method not implemented!')
-        raise NotImplementedError('Method not implemented!')
-
 
 def add_DataNodeServiceServicer_to_server(servicer, server):
     rpc_method_handlers = {
@@ -338,11 +327,6 @@ def add_DataNodeServiceServicer_to_server(servicer, server):
                     servicer.SendBlock,
                     request_deserializer=Service__pb2.BlockId.FromString,
                     response_serializer=Service__pb2.BlockData.SerializeToString,
-            ),
-            'ChangeOfLeader': grpc.unary_unary_rpc_method_handler(
-                    servicer.ChangeOfLeader,
-                    request_deserializer=Service__pb2.LeaderInfo.FromString,
-                    response_serializer=Service__pb2.Status.SerializeToString,
             ),
     }
     generic_handler = grpc.method_handlers_generic_handler(
@@ -436,22 +420,5 @@ class DataNodeService(object):
         return grpc.experimental.unary_unary(request, target, '/DataNodeService/SendBlock',
             Service__pb2.BlockId.SerializeToString,
             Service__pb2.BlockData.FromString,
-            options, channel_credentials,
-            insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
-
-    @staticmethod
-    def ChangeOfLeader(request,
-            target,
-            options=(),
-            channel_credentials=None,
-            call_credentials=None,
-            insecure=False,
-            compression=None,
-            wait_for_ready=None,
-            timeout=None,
-            metadata=None):
-        return grpc.experimental.unary_unary(request, target, '/DataNodeService/ChangeOfLeader',
-            Service__pb2.LeaderInfo.SerializeToString,
-            Service__pb2.Status.FromString,
             options, channel_credentials,
             insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
