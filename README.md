@@ -59,7 +59,53 @@ Client:
 
 ### descripción y como se configura los parámetros del proyecto (ej: ip, puertos, conexión a bases de datos, variables de ambiente, parámetros, etc)
 -Para configurar parametros del proyecto, se tiene que modificar el archivo.env
+## Detalles de la organización del código por carpetas o descripción de algún archivo.
+```
+D:.
+|   .gitignore
+|   docker-compose-datanode.yml
+|   docker-compose-namenode.yml
+|   README.md
+|
++---Client
+|   |   .env
+|   |   client.py
+|   |   partitionManagement.py
+|   |   __init__.py
+|   |
+|   \---files
+|           1mb.txt
+|           20mb.txt
+|           himno.txt
+|           prueba.txt
+|
++---DataNode
+|       .env
+|       dataNode.py
+|       dockerfile
+|       requirements.txt
+|       __init__.py
+|
++---NameNode
+|       .env
+|       dockerfile
+|       nameNode.py
+|       requirements.txt
+|       __init__.py
+|
+\---Protobufs
+    |   makefile
+    |   Service.proto
+    |   Service_pb2.py
+    |   Service_pb2_grpc.py
+    |   __init__.py
+    |
+    \---__pycache__
+            Service_pb2.cpython-311.pyc
+            Service_pb2_grpc.cpython-311.pyc
+            __init__.cpython-311.pyc
 
+```
 # Instructions for Running the DFS (Distributed File System)
 
 Follow this order to run the files:
