@@ -50,6 +50,9 @@ Client:
 - librerias y paquetes: Especificados en requirements.txt en carpeta 
 - Como se compila y ejecuta: Primero se deben instalar las dependencias de /requirements.txt, para despues ejecutar este comando Client/client.py
 
+### descripción y como se configura los parámetros del proyecto (ej: ip, puertos, conexión a bases de datos, variables de ambiente, parámetros, etc)
+-Para configurar parametros del proyecto, se tiene que modificar el archivo.env
+
 # Instructions for Running the DFS (Distributed File System)
 
 Follow this order to run the files:
