@@ -21,18 +21,25 @@ El proyecto abarca la creación de un sistema de almacenamiento distribuido, el 
 ### 1.2 Que aspectos NO cumplió o desarrolló de la actividad propuesta por el profesor (requerimientos funcionales y no funcionales)
 
 ## 2.Información general de diseño de alto nivel, arquitectura, patrones.
-### Componentes:
+### 2.1 Componentes:
 - Client: Aplicación desarollada en el lenguaje Pyhton
 - Namenode: Servidor que da respuesta a peticiones de cliente
 - Datanode: Nodos que almacenan los archivos en bloques
   
-### Patrones:
+### 2.2 Patrones:
 
 -Cliente-servidor: Se usa este modelo ya que el cliente es el que realiza las peticiones a un servidor, en este caso es el Namenode y este se conecta con los datanodes, para realizar todas las tareas.
 
 -gRPC: Para la comunicación entre componentes se utilizará el protocolo gRPC. Este protocolo no solo garantiza que los datos lleguen a su destino, sino que también proporciona un alto rendimiento. Es por eso que no se optó por MOM, ya que se requiere una comunicación más estrecha y en tiempo real entre sus componentes, además de que no se necesitas garantizar la entrega de mensajes incluso en caso de fallos de red o de componentes.
 
 ![diseño](https://github.com/Tbernal121/ST0263_Proyecto1/assets/92877092/437e0e9c-14a2-406a-9a36-ff6072a5f87b)
+
+## 2.3 Partición y manejo de archivos
+
+Nuestro proyecto incluye una funcionalidad que permite dividir archivos grandes en segmentos de 256 bytes y almacenarlos en un directorio designado, facilitando así su manejo y transferencia. Cuando se requiere, estas partes se pueden reensamblar para reconstruir el archivo original. Este proceso de partición y unión asegura una gestión eficaz de archivos de gran tamaño, optimizando el uso del espacio de almacenamiento y mejorando la eficiencia en la transferencia de datos.
+
+## 2.4 Cliente 
+
 
 ## 3 Descripción del ambiente de desarrollo y técnico: lenguaje de programación, librerias, paquetes, etc, con sus numeros de versiones.
 NameNode:
