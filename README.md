@@ -1,11 +1,13 @@
-#Proyecto 1 Telemática
+## ST-0263 Topicos en Telemática
 
-## Integrantes:
+## Estudiantes:
 -Daniel Pineda(dpinedav@eafit.edu.co)
 
 -Tomas Bernal Zuluaga(tberalz@eafit.edu.co)
 
 -Andres leonardo Rojas Peña(alrojasp@eafit.edu.co)
+
+## Profesor: Edwin Nelson Montoya(emontoya@eafit.edu.co)
 
 ## 1.Breve descripción del proyecto:
 El proyecto abarca la creación de un sistema de almacenamiento distribuido, el cual opera bajo una estructura de  cliente-servidor. Este sistema empleará Python para programar tanto los datanodes como el cliente, y Docker para el manejo del NameNode. La estructura del sistema se fundamenta en un NameNode central y varios DataNodes que interactúan a través del protocolo gRPC, dedicados a almacenar y organizar archivos de forma distribuida. La meta de este proyecto fue desarrollar las capacidades esenciales de un sistema de este tipo, tales como la replicación de datos, aseguramiento de la disponibilidad de los nodos y el correcto manejo de fallos.
@@ -31,6 +33,8 @@ El proyecto abarca la creación de un sistema de almacenamiento distribuido, el 
 -gRPC: Para la comunicación entre componentes se utilizará el protocolo gRPC. Este protocolo no solo garantiza que los datos lleguen a su destino, sino que también proporciona un alto rendimiento. Es por eso que no se optó por MOM, ya que se requiere una comunicación más estrecha y en tiempo real entre sus componentes, además de que no se necesitas garantizar la entrega de mensajes incluso en caso de fallos de red o de componentes.
 
 ![diseño](https://github.com/Tbernal121/ST0263_Proyecto1/assets/92877092/437e0e9c-14a2-406a-9a36-ff6072a5f87b)
+
+## 3 Descripción del ambiente de desarrollo y técnico: lenguaje de programación, librerias, paquetes, etc, con sus numeros de versiones.
 
 
 # Instructions for Running the DFS (Distributed File System)
