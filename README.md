@@ -1,8 +1,10 @@
 #Proyecto 1 Telemática
 
-##Integrantes:
+## Integrantes:
 -Daniel Pineda(dpinedav@eafit.edu.co)
+
 -Tomas Bernal Zuluaga(tberalz@eafit.edu.co)
+
 -Andres leonardo Rojas Peña(alrojasp@eafit.edu.co)
 
 ## 1.Breve descripción del proyecto:
