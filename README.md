@@ -35,7 +35,20 @@ El proyecto abarca la creación de un sistema de almacenamiento distribuido, el 
 ![diseño](https://github.com/Tbernal121/ST0263_Proyecto1/assets/92877092/437e0e9c-14a2-406a-9a36-ff6072a5f87b)
 
 ## 3 Descripción del ambiente de desarrollo y técnico: lenguaje de programación, librerias, paquetes, etc, con sus numeros de versiones.
+NameNode:
+- lenguaje de programación: Python
+- librerias y paquetes: Especificados en requirements.txt en carpeta NameNode
+- Como se compila y ejecuta: Primero se deben instalar las dependencias de NameNode/requirements.txt, para despues ejecutar este comando NameNode/nameNode.py
 
+DataNode:
+- lenguaje de programación: Python
+- librerias y paquetes: Especificados en requirements.txt en carpeta DataNode
+- Como se compila y ejecuta: Primero se deben instalar las dependencias de DataNode/requirements.txt, para despues ejecutar este comando DataNode/dataNode.py
+
+Client:
+- lenguaje de programación: Python
+- librerias y paquetes: Especificados en requirements.txt en carpeta 
+- Como se compila y ejecuta: Primero se deben instalar las dependencias de /requirements.txt, para despues ejecutar este comando Client/client.py
 
 # Instructions for Running the DFS (Distributed File System)
 
