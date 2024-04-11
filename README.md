@@ -16,11 +16,19 @@ El proyecto abarca la creación de un sistema de almacenamiento distribuido, el 
 - Presencia de bloques en al menos 2 dataNodes
 - Cambio de leader si en algún momento este falla
 
-## 2.Información general de diseño de alto nivel, arquitectura, patrones, mejores prácticas utilizadas.
+### 1.2 Que aspectos NO cumplió o desarrolló de la actividad propuesta por el profesor (requerimientos funcionales y no funcionales)
+
+## 2.Información general de diseño de alto nivel, arquitectura, patrones.
 Componentes:
 - Client: Aplicación desarollada en el lenguaje Pyhton
 - Namenode: Servidor que da respuesta a peticiones de cliente
 - Datanode: Nodos que almacenan los archivos en bloques
+Patrones:
+-Cliente-servidor: Se usa este modelo ya que el cliente es el que realiza las peticiones a un servidor, en este caso es el Namenode y este se conecta con los datanodes, para realizar todas las tareas.
+-gRPC: Para la comunicación entre componentes se utilizará el protocolo gRPC. Este protocolo no solo garantiza que los datos lleguen a su destino, sino que también proporciona un alto rendimiento. Es por eso que no se optó por MOM, ya que se requiere una comunicación más estrecha y en tiempo real entre sus componentes, además de que no se necesitas garantizar la entrega de mensajes incluso en caso de fallos de red o de componentes.
+
+![diseño](https://github.com/Tbernal121/ST0263_Proyecto1/assets/92877092/437e0e9c-14a2-406a-9a36-ff6072a5f87b)
+
 
 # Instructions for Running the DFS (Distributed File System)
 
