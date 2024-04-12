@@ -38,8 +38,11 @@ El proyecto abarca la creación de un sistema de almacenamiento distribuido, el 
 
 Nuestro proyecto incluye una funcionalidad que permite dividir archivos grandes en segmentos de 256 bytes y almacenarlos en un directorio designado, facilitando así su manejo y transferencia. Cuando se requiere, estas partes se pueden reensamblar para reconstruir el archivo original. Este proceso de partición y unión asegura una gestión eficaz de archivos de gran tamaño, optimizando el uso del espacio de almacenamiento y mejorando la eficiencia en la transferencia de datos.
 
-## 2.4 Cliente 
+## 2.4 Mantenimiento de la Red
+El mantenimiento de la red en nuestro proyecto esta centrado en la configuración y el  despliegue de servicios que interactúan entre sí. Los servicios como Client, DataNode y NameNode se implementan sobre una infraestructura de red diseñada para comunicarse eficientemente.
 
+## 2.5 Mantenimiento del Directorio y Uso de Docker
+El proyecto utiliza Docker para manejar el mantenimiento de los directorios de DataNode y NameNode, como se evidencia en los archivos docker-compose-datanode.yml y docker-compose-namenode.yml. Estos archivos contienen configuraciones para desplegar estos nodos de forma aislada y manejable, esta práctica nos ayuda a simplificar la configuración del proyecto.
 
 ## 3 Descripción del ambiente de desarrollo y técnico: lenguaje de programación, librerias, paquetes, etc, con sus numeros de versiones.
 NameNode:
