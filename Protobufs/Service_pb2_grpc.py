@@ -16,7 +16,7 @@ class NameNodeServiceStub(object):
         """
         self.LeaderHeartbeat = channel.unary_unary(
                 '/NameNodeService/LeaderHeartbeat',
-                request_serializer=Service__pb2.NameNodeID.SerializeToString,
+                request_serializer=Service__pb2.NameNodeInfo.SerializeToString,
                 response_deserializer=Service__pb2.LeaderInfo.FromString,
                 )
         self.ListFiles = channel.unary_unary(
@@ -90,7 +90,7 @@ def add_NameNodeServiceServicer_to_server(servicer, server):
     rpc_method_handlers = {
             'LeaderHeartbeat': grpc.unary_unary_rpc_method_handler(
                     servicer.LeaderHeartbeat,
-                    request_deserializer=Service__pb2.NameNodeID.FromString,
+                    request_deserializer=Service__pb2.NameNodeInfo.FromString,
                     response_serializer=Service__pb2.LeaderInfo.SerializeToString,
             ),
             'ListFiles': grpc.unary_unary_rpc_method_handler(
@@ -140,7 +140,7 @@ class NameNodeService(object):
             timeout=None,
             metadata=None):
         return grpc.experimental.unary_unary(request, target, '/NameNodeService/LeaderHeartbeat',
-            Service__pb2.NameNodeID.SerializeToString,
+            Service__pb2.NameNodeInfo.SerializeToString,
             Service__pb2.LeaderInfo.FromString,
             options, channel_credentials,
             insecure, call_credentials, compression, wait_for_ready, timeout, metadata)

@@ -4,7 +4,6 @@ def file_partition(file_name):
     blocks = [] # List to store the  blocks
     block_size = 256 # int(os.getenv("BLOCK_SIZE"))
     base_file_name = os.path.splitext(os.path.basename(file_name))[0] + os.path.splitext(os.path.basename(file_name))[1]
-    print(f"base_file_name: {base_file_name}")
     destination_directory = f"{base_file_name}_dir"
     
     # Create the directory

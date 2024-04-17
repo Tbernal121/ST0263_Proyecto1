@@ -15,7 +15,7 @@ from Protobufs import Service_pb2_grpc
 
 load_dotenv() # Load enviroment variables
 
-channel_nameNode = grpc.insecure_channel(f'{os.getenv("HOST_ADDRESS")}:{os.getenv("NAMENODE_PORT")}') # Address of the nameNode Leader
+channel_nameNode = grpc.insecure_channel(f'{os.getenv("NAMENODE_LEADER_IP")}:{os.getenv("NAMENODE_PORT")}') # Address of the nameNode Leader
 nameNode_stub = Service_pb2_grpc.DataNodeServiceStub(channel_nameNode)
 
 class DataNodeService(Service_pb2_grpc.DataNodeServiceServicer):
@@ -25,13 +25,12 @@ class DataNodeService(Service_pb2_grpc.DataNodeServiceServicer):
 
     def InitialContact(self):
         initial_contact = Service_pb2.DataNodeID(id=os.getenv("PORT"))
-        response = nameNode_stub.InitialContact(initial_contact)
-        print("Initial contact sent")
+        nameNode_stub.InitialContact(initial_contact)
        
     def SendHeartbeat(self):
         while True:
             heartbeat = Service_pb2.DataNodeID(id=os.getenv("PORT"))
-            response = nameNode_stub.SendHeartbeat(heartbeat)
+            nameNode_stub.SendHeartbeat(heartbeat)
             print("Heartbeat sent")
             time.sleep(int(os.getenv("HEARTBEAT_INTERVAL")))  # Wait for n seconds before sending the next heartbeat
     

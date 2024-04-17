@@ -5,6 +5,7 @@ import sys
 import tempfile
 import partitionManagement
 import time
+import json
 from dotenv import load_dotenv
 
 current_dir = os.path.dirname(os.path.abspath(__file__))
@@ -17,7 +18,7 @@ from Protobufs import Service_pb2_grpc
 load_dotenv() # Load enviroment variables
 
 def run():
-    channel_nameNode = grpc.insecure_channel(f'{os.getenv("HOST_ADDRESS")}:{os.getenv("NAMENODE_PORT")}') # Address of the nameNode Leader
+    channel_nameNode = grpc.insecure_channel(f'{os.getenv("NAMENODE_LEADER_IP")}:{os.getenv("NAMENODE_LEADER_PORT")}') # Address of the nameNode Leader
     nameNode_stub = Service_pb2_grpc.NameNodeServiceStub(channel_nameNode) # verify
 
     while True:
@@ -38,8 +39,9 @@ def run():
             blocks = partitionManagement.file_partition(f'{os.getenv("DIR_PATH")}{file_name}')
             file_data = Service_pb2.FileInfo(name=file_name, blocks_id=blocks)
             dataNode_ids = nameNode_stub.CreateFile(file_data)
-            for dataNode_id in dataNode_ids.id_list:
-                channel_dataNode = grpc.insecure_channel(f'{os.getenv("HOST_ADDRESS")}:{dataNode_id}')
+            dict_addresses = json.loads(dataNode_ids.dict_addresses)
+            for dataNode_ip in dict_addresses.keys():
+                channel_dataNode = grpc.insecure_channel(f'{dataNode_ip}:{dict_addresses[dataNode_ip]}')
                 dataNode_stub = Service_pb2_grpc.DataNodeServiceStub(channel_dataNode)
                 # Send each block to the DataNode
                 for i, block in enumerate(blocks):
@@ -70,8 +72,9 @@ def run():
                             if block_id in block_id_register:
                                 pass
                             else:
-                                dataNode_id = block_locations.dataNode_id  # Get the first DataNode ID # block_locations.dataNode_id [0]
-                                channel_dataNode = grpc.insecure_channel(f'{os.getenv("HOST_ADDRESS")}:{dataNode_id}')
+                                dataNode_ip = block_locations.dataNode_ip  # Get the first DataNode IP
+                                dataNode_port = block_locations.dataNode_port
+                                channel_dataNode = grpc.insecure_channel(f'{dataNode_ip}:{dataNode_port}')
                                 dataNode_stub = Service_pb2_grpc.DataNodeServiceStub(channel_dataNode)
                                 block_request = Service_pb2.BlockId(id=block_id)
                                 block = dataNode_stub.SendBlock(block_request)
@@ -99,7 +102,9 @@ def run():
                     last_block_data = None
                     for location in block_locations_map.locations:
                         if location.block_id == last_block_id:
-                            channel_dataNode = grpc.insecure_channel(f'{os.getenv("HOST_ADDRESS")}:{location.dataNode_id}')
+                            dataNode_ip = location.dataNode_ip  # Get the first DataNode IP
+                            dataNode_port = location.dataNode_port
+                            channel_dataNode = grpc.insecure_channel(f'{dataNode_ip}:{dataNode_port}')
                             dataNode_stub = Service_pb2_grpc.DataNodeServiceStub(channel_dataNode)
                             last_block_data = dataNode_stub.SendBlock(Service_pb2.BlockId(id=last_block_id))
 
@@ -116,7 +121,7 @@ def run():
                         new_block_id = f"new_block_{int(time.time())}"  # Example of generating a new block_id
 
                         # Add the new block to the last DataNode
-                        block_location = Service_pb2.BlockLocation(block_id=new_block_id, dataNode_id=location.dataNode_id)
+                        block_location = Service_pb2.BlockLocation(block_id=new_block_id, dataNode_ip=location.dataNode_ip) # , dataNode_port=
                         block_locations_map.locations.append(block_location)
 
                         # Store the new block in the selected DataNode

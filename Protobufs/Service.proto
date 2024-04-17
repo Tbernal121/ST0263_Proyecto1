@@ -1,7 +1,7 @@
 syntax = "proto3";
   
   service NameNodeService {
-    rpc LeaderHeartbeat(NameNodeID) returns (LeaderInfo) {}
+    rpc LeaderHeartbeat(NameNodeInfo) returns (LeaderInfo) {}
     rpc ListFiles(Empty) returns (FileList) {}
     rpc CreateFile(FileInfo) returns (DataNodeIDS) {}
     rpc GetBlockLocations(FileName) returns (BlockLocations) {}
@@ -54,11 +54,12 @@ message BlockAllocation {
 
 message BlockLocation {
   string block_id = 1;
-  string dataNode_id = 2;
+  string dataNode_ip = 2;
+  string dataNode_port = 3;
 }
 
 message BlockLocations {
-  repeated BlockLocation locations = 1;  // BlockLocation list
+  repeated BlockLocation locations = 1;
 }
 
 message DataNodeInfo {
@@ -85,12 +86,13 @@ message DataNodeID {
   string id = 1;
 }
 
-message NameNodeID {
-  string id = 1;
+message NameNodeInfo {
+  string ip = 1;
+  string port = 2;
 }
 
 message DataNodeIDS {
-  repeated string id_list = 1;
+  string dict_addresses = 1;
 }
 
 message BlockData {
@@ -119,6 +121,7 @@ message Dictionary {
 message LeaderInfo {
   repeated string id_list = 1;
   int32 last_assigned = 2;
-  int32 nameNode_first_heartbeat = 3;
-  string dictionary = 4; // Dictionary dictionary = 4;
+  string dictionaryIndexDB = 4;
+  string dictionaryDataNode_addresses = 5;
+  string dictionaryNameNodes_ip_port = 6;
 }
